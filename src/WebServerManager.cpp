@@ -240,6 +240,7 @@ WebServerManager::WebServerManager(SensorFusionEngine& fusion, SystemConfig& con
       _lastBroadcastTime(0) {}
 
 void WebServerManager::begin() {
+#if ENABLE_WIFI
     setupWiFi();
     setupRoutes();
 
@@ -250,10 +251,25 @@ void WebServerManager::begin() {
 
     _server.addHandler(&_ws);
     _server.begin();
+#else
+    _connectedSTA = false;
+    _ipAddress = "USB Mode (WiFi Off)";
+#endif
 }
 
 void WebServerManager::setupWiFi() {
+    // If SSID is placeholder, immediately boot SoftAP hotspot without 6-second blocking delay
+    if (strcmp(DEFAULT_WIFI_SSID, "YourWiFiSSID") == 0) {
+        _connectedSTA = false;
+        WiFi.mode(WIFI_AP);
+        WiFi.setTxPower(WIFI_POWER_8_5dBm); // Reduce RF power spike
+        WiFi.softAP(AP_SSID, AP_PASS);
+        _ipAddress = WiFi.softAPIP().toString();
+        return;
+    }
+
     WiFi.mode(WIFI_AP_STA);
+    WiFi.setTxPower(WIFI_POWER_8_5dBm); // Reduce RF power spike
     WiFi.begin(DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASS);
 
     uint32_t startAttempt = millis();
@@ -322,6 +338,7 @@ void WebServerManager::handleWebSocketMessage(void* arg, uint8_t* data, size_t l
 }
 
 void WebServerManager::update() {
+#if ENABLE_WIFI
     _ws.cleanupClients();
 
     uint32_t now = millis();
@@ -330,6 +347,7 @@ void WebServerManager::update() {
         _lastBroadcastTime = now;
         broadcastTelemetry();
     }
+#endif
 }
 
 void WebServerManager::broadcastTelemetry() {

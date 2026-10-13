@@ -90,16 +90,34 @@ void LD6003DDriver::parseStandardFrame(const uint8_t* frame, size_t length) {
     for (size_t i = 0; i < targetCount; i++) {
         size_t offset = 4 + (i * 8);
         if (offset + 7 >= length) break;
+        const uint8_t* p = &frame[offset];
 
-        uint16_t rawX = frame[offset]     | ((uint16_t)frame[offset + 1] << 8);
-        uint16_t rawY = frame[offset + 2] | ((uint16_t)frame[offset + 3] << 8);
-        uint16_t rawS = frame[offset + 4] | ((uint16_t)frame[offset + 5] << 8);
-        uint16_t rawR = frame[offset + 6] | ((uint16_t)frame[offset + 7] << 8);
+        // Check if target slot is empty
+        bool empty = true;
+        for (int k = 0; k < 8; k++) {
+            if (p[k] != 0) {
+                empty = false;
+                break;
+            }
+        }
 
-        // Hi-Link Sign conversion (bit 15 is sign bit)
-        int16_t x_mm = (rawX & 0x8000) ? -(int16_t)(rawX & 0x7FFF) : (int16_t)(rawX & 0x7FFF);
-        int16_t y_mm = (rawY & 0x8000) ? -(int16_t)(rawY & 0x7FFF) : (int16_t)(rawY & 0x7FFF);
-        int16_t s_cm = (rawS & 0x8000) ? -(int16_t)(rawS & 0x7FFF) : (int16_t)(rawS & 0x7FFF);
+        Target& tgt = _targets[i];
+        tgt.id = i + 1;
+
+        if (empty) {
+            tgt.valid = false;
+            continue;
+        }
+
+        // Hi-Link Sign conversion (bit 15 is 1 for positive)
+        uint16_t rawX = p[0] | ((uint16_t)p[1] << 8);
+        uint16_t rawY = p[2] | ((uint16_t)p[3] << 8);
+        uint16_t rawS = p[4] | ((uint16_t)p[5] << 8);
+        uint16_t rawR = p[6] | ((uint16_t)p[7] << 8);
+
+        int16_t x_mm = (rawX & 0x8000) ? (int16_t)(rawX & 0x7FFF) : -(int16_t)rawX;
+        int16_t y_mm = (rawY & 0x8000) ? (int16_t)(rawY & 0x7FFF) : -(int16_t)rawY;
+        int16_t s_cm = (rawS & 0x8000) ? (int16_t)(rawS & 0x7FFF) : -(int16_t)rawS;
 
         float x_m = (float)x_mm / 1000.0f;
         float y_m = (float)y_mm / 1000.0f;
@@ -108,10 +126,7 @@ void LD6003DDriver::parseStandardFrame(const uint8_t* frame, size_t length) {
         float dist_m = sqrtf((x_m * x_m) + (y_m * y_m));
         float angle_deg = atan2f(x_m, y_m) * (180.0f / M_PI);
 
-        Target& tgt = _targets[i];
-        tgt.id = i + 1;
-
-        if (dist_m > 0.10f && dist_m < 8.5f && y_m > 0.05f) {
+        if (dist_m > 0.05f && dist_m < 9.0f && y_m > 0.0f) {
             tgt.valid = true;
             tgt.x = x_m;
             tgt.y = y_m;

@@ -24,6 +24,8 @@ private:
     bool _connected;
     uint32_t _lastPacketTime;
     uint32_t _packetCount;
+    uint32_t _bytesReceived;
+    uint32_t _lastStatsTime;
     String _latestRawHex;
 
     // Packet parsing state machine

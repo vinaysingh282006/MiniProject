@@ -3,1592 +3,1842 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radar Fusion OS // Dual 24GHz + 60GHz Spatial Intelligence Console</title>
+  <title>Radar Fusion OS // 24GHz + 60GHz mmWave Spatial Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #070a12;
-      --card-bg: rgba(14, 21, 37, 0.82);
-      --card-hover: rgba(22, 33, 58, 0.9);
-      --border: #1a2742;
-      --border-glow: rgba(0, 229, 255, 0.3);
+      --bg: #070a13;
+      --card-bg: rgba(13, 20, 36, 0.92);
+      --border: #1a2a48;
+      --border-hi: #2e4778;
       --cyan: #00e5ff;
-      --magenta: #e040fb;
       --amber: #ffb300;
-      --alert: #ff1744;
+      --magenta: #e040fb;
       --green: #00e676;
-      --blue: #2979ff;
-      --text: #f1f5f9;
+      --alert: #ff1744;
+      --text: #e8f0fe;
       --text-dim: #94a3b8;
       --muted: #475569;
-      --glow-cyan: 0 0 15px rgba(0, 229, 255, 0.45);
-      --glow-magenta: 0 0 15px rgba(224, 64, 251, 0.45);
+      --glow-cyan: 0 0 16px rgba(0, 229, 255, 0.45);
+      --glow-amber: 0 0 16px rgba(255, 179, 0, 0.45);
+      --glow-magenta: 0 0 16px rgba(224, 64, 251, 0.45);
       --glow-alert: 0 0 20px rgba(255, 23, 68, 0.6);
     }
 
-    /* Military HUD Theme Option */
     body.theme-military {
       --bg: #060e0a;
-      --card-bg: rgba(10, 24, 16, 0.85);
-      --border: #153822;
+      --card-bg: rgba(8, 22, 14, 0.94);
+      --border: #12381e;
+      --border-hi: #205c32;
       --cyan: #00e676;
-      --magenta: #76ff03;
       --amber: #ffd600;
-      --border-glow: rgba(0, 230, 118, 0.3);
+      --magenta: #76ff03;
     }
 
-    /* High Contrast Void Theme */
     body.theme-void {
-      --bg: #000000;
-      --card-bg: rgba(15, 15, 20, 0.9);
-      --border: #262626;
+      --bg: #020205;
+      --card-bg: rgba(12, 12, 18, 0.96);
+      --border: #222232;
+      --border-hi: #3a3a55;
       --cyan: #38bdf8;
-      --magenta: #f43f5e;
       --amber: #fbbf24;
+      --magenta: #f43f5e;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-      overflow-x: hidden;
+      font-family: 'Inter', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      transition: background 0.3s ease;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 229, 255, 0.05) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 40% at 85% 85%, rgba(224, 64, 251, 0.04) 0%, transparent 60%);
     }
 
-    /* Flash border on alert */
     body.perimeter-breached {
-      box-shadow: inset 0 0 50px rgba(255, 23, 68, 0.65);
-      animation: alertPulseScreen 0.8s infinite alternate;
+      animation: alertPulse 0.7s infinite alternate;
     }
-    @keyframes alertPulseScreen {
-      0% { box-shadow: inset 0 0 25px rgba(255, 23, 68, 0.4); }
-      100% { box-shadow: inset 0 0 70px rgba(255, 23, 68, 0.8); }
+    @keyframes alertPulse {
+      0% { box-shadow: inset 0 0 35px rgba(255, 23, 68, 0.35); }
+      100% { box-shadow: inset 0 0 90px rgba(255, 23, 68, 0.75); }
     }
 
-    /* Header Nav */
+    /* Top Navigation Bar */
     header {
-      background: rgba(10, 15, 26, 0.95);
+      background: rgba(7, 11, 20, 0.97);
       border-bottom: 1px solid var(--border);
       padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      backdrop-filter: blur(14px);
+      flex-wrap: wrap;
+      gap: 12px;
+      backdrop-filter: blur(16px);
       position: sticky;
       top: 0;
-      z-index: 100;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 200;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.6);
     }
+
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    .radar-spinner-icon {
-      width: 32px;
-      height: 32px;
+
+    .radar-icon {
+      width: 36px;
+      height: 36px;
       border: 2px solid var(--cyan);
       border-radius: 50%;
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--glow-cyan);
+      box-shadow: var(--glow-cyan), inset 0 0 10px rgba(0, 229, 255, 0.15);
+      flex-shrink: 0;
     }
-    .radar-spinner-icon::before {
-      content: '';
+    .radar-icon::before {
+      content: "";
       position: absolute;
-      top: 0; left: 50%;
-      width: 2px; height: 50%;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 50%;
       background: linear-gradient(to top, transparent, var(--cyan));
       transform-origin: bottom center;
-      animation: spinRay 2.5s linear infinite;
+      animation: sweepIcon 2.2s linear infinite;
     }
-    .radar-spinner-icon::after {
-      content: '';
-      width: 6px; height: 6px;
+    .radar-icon::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
       background: var(--magenta);
       border-radius: 50%;
-      box-shadow: 0 0 6px var(--magenta);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 8px var(--magenta);
     }
-    @keyframes spinRay {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
+    @keyframes sweepIcon { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
     .brand-title {
-      font-size: 1.18rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.12rem;
       font-weight: 800;
-      letter-spacing: 1.8px;
+      letter-spacing: 2px;
       background: linear-gradient(90deg, var(--cyan), var(--magenta));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     .brand-sub {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       color: var(--text-dim);
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Buttons */
-    .btn {
-      background: #141e33;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      user-select: none;
-    }
-    .btn:hover { background: #1e2c4a; border-color: #3b5078; }
-    .btn:active { transform: scale(0.97); }
-    .btn-cyan { border-color: var(--cyan); color: var(--cyan); }
-    .btn-cyan:hover, .btn-cyan.btn-active {
-      background: rgba(0, 229, 255, 0.18);
-      box-shadow: var(--glow-cyan);
-      color: #fff;
-    }
-    .btn-magenta { border-color: var(--magenta); color: var(--magenta); }
-    .btn-magenta:hover, .btn-magenta.btn-active {
-      background: rgba(224, 64, 251, 0.18);
-      box-shadow: var(--glow-magenta);
-      color: #fff;
-    }
-    .btn-amber { border-color: var(--amber); color: var(--amber); }
-    .btn-amber:hover, .btn-amber.btn-active {
-      background: rgba(255, 179, 0, 0.18);
-      box-shadow: 0 0 12px rgba(255, 179, 0, 0.4);
-      color: #fff;
-    }
-    .btn-danger { border-color: var(--alert); color: var(--alert); }
-    .btn-danger:hover { background: rgba(255, 23, 68, 0.2); }
-
-    /* Mode group */
+    /* Mode Selector Bar */
     .mode-bar {
       display: flex;
       gap: 6px;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(10, 16, 32, 0.8);
       padding: 4px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid var(--border);
     }
 
-    /* Connection controls */
+    .mode-btn {
+      background: rgba(16, 24, 46, 0.6);
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      padding: 7px 15px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .mode-btn:hover {
+      background: rgba(25, 38, 70, 0.8);
+      color: var(--text);
+    }
+    .mode-btn.active-24 {
+      background: rgba(0, 229, 255, 0.16);
+      border-color: var(--cyan);
+      color: #fff;
+      box-shadow: var(--glow-cyan);
+    }
+    .mode-btn.active-60 {
+      background: rgba(255, 179, 0, 0.16);
+      border-color: var(--amber);
+      color: #fff;
+      box-shadow: var(--glow-amber);
+    }
+    .mode-btn.active-dual {
+      background: rgba(224, 64, 251, 0.18);
+      border-color: var(--magenta);
+      color: #fff;
+      box-shadow: var(--glow-magenta);
+    }
+
+    /* Connection & Controls */
     .conn-group {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
-    .conn-input {
-      background: #0b1120;
+
+    .btn {
+      background: rgba(16, 24, 46, 0.8);
       border: 1px solid var(--border);
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 0.82rem;
-      width: 160px;
+      color: var(--text-dim);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
     }
+    .btn:hover {
+      background: rgba(26, 40, 74, 0.9);
+      color: var(--text);
+      border-color: var(--border-hi);
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-cyan { border-color: var(--cyan); color: var(--cyan); }
+    .btn-cyan.btn-active, .btn-cyan:hover {
+      background: rgba(0, 229, 255, 0.16);
+      box-shadow: var(--glow-cyan);
+      color: #fff;
+    }
+    .btn-alert { border-color: var(--alert); color: var(--alert); }
+    .btn-alert:hover { background: rgba(255, 23, 68, 0.16); color: #fff; }
+
     .status-pill {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.78rem;
-      padding: 5px 10px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.9);
+      gap: 7px;
+      font-size: 0.75rem;
+      padding: 6px 12px;
+      border-radius: 16px;
+      background: rgba(10, 16, 30, 0.9);
       border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
     }
     .status-dot {
-      width: 8px; height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: var(--muted);
-      transition: all 0.3s ease;
+      transition: all 0.3s;
     }
-    .status-dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); }
-    .status-dot.breach { background: var(--alert); box-shadow: 0 0 10px var(--alert); animation: blink 0.5s infinite; }
+    .status-dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+    }
+    .status-dot.breach {
+      background: var(--alert);
+      box-shadow: var(--glow-alert);
+      animation: blink 0.4s infinite;
+    }
     @keyframes blink { 50% { opacity: 0.2; } }
 
     /* Alert Banner */
     #alertBanner {
       display: none;
-      background: linear-gradient(90deg, #d50000, #ff1744, #d50000);
+      background: linear-gradient(90deg, #b71c1c, #ff1744, #b71c1c);
       background-size: 200% 100%;
       color: #fff;
       text-align: center;
       padding: 8px;
       font-weight: 800;
       letter-spacing: 2px;
-      font-size: 0.88rem;
-      animation: alertGrad 1.5s ease infinite alternate;
+      font-size: 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      animation: alertGrad 1.2s ease infinite alternate;
       border-bottom: 2px solid #ff80ab;
     }
-    @keyframes alertGrad {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
-    }
+    @keyframes alertGrad { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
 
-    /* Main Workspace Grid */
+    /* Main Dashboard Layout */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: 1fr 440px;
-      gap: 16px;
-      padding: 16px;
+      grid-template-columns: 1fr 430px;
+      gap: 14px;
+      padding: 14px;
       flex: 1;
     }
+    @media (max-width: 1080px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
 
-    /* Radar Viewport Card */
+    /* Radar Canvas Card */
     .radar-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: 14px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      position: relative;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
     }
+
     .radar-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
       gap: 8px;
     }
+
     .canvas-container {
       position: relative;
       flex: 1;
       min-height: 520px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at 50% 92%, #0b152b 0%, #060a14 75%);
-      border-radius: 10px;
-      border: 1px solid #16243d;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 229, 255, 0.12);
       overflow: hidden;
+      background: radial-gradient(ellipse at 50% 100%, #0b152b 0%, #050810 70%);
       cursor: crosshair;
     }
-    canvas {
+
+    canvas#radarCanvas {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
-    /* Canvas Overlays */
-    .radar-hud-overlay {
+    .hud-box {
+      position: absolute;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      line-height: 1.6;
+      background: rgba(5, 10, 22, 0.86);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 12px;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+    .hud-box span { color: var(--cyan); }
+    .hud-tl { top: 12px; left: 12px; }
+    .hud-br { bottom: 12px; right: 12px; color: var(--amber); border-color: rgba(255, 179, 0, 0.25); }
+
+    .zone-banner {
       position: absolute;
       top: 12px;
-      left: 12px;
-      pointer-events: none;
-      font-family: monospace;
-      font-size: 0.76rem;
-      line-height: 1.4;
-      background: rgba(10, 16, 28, 0.75);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 12px;
-      backdrop-filter: blur(8px);
-    }
-    .radar-hud-overlay span { color: var(--cyan); }
-
-    .canvas-cursor-info {
-      position: absolute;
-      bottom: 12px;
       right: 12px;
+      background: rgba(0, 229, 255, 0.18);
+      border: 1px solid var(--cyan);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      display: none;
+      animation: pulseZone 1s infinite alternate;
       pointer-events: none;
-      font-family: monospace;
-      font-size: 0.75rem;
-      background: rgba(10, 16, 28, 0.85);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 8px;
-      color: var(--amber);
     }
+    @keyframes pulseZone { 0% { opacity: 0.7; } 100% { opacity: 1; } }
 
-    /* Zone Drawing Tip */
-    .zone-draw-tip {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      font-size: 0.72rem;
+    /* Strip Charts */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .chart-box {
+      background: rgba(4, 7, 16, 0.92);
+      border-radius: 8px;
+      border: 1px solid #0e1e35;
+      padding: 8px 10px;
+    }
+    .chart-label {
+      font-size: 0.7rem;
       color: var(--text-dim);
-      background: rgba(10, 16, 28, 0.8);
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      pointer-events: none;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    canvas.strip-chart {
+      width: 100%;
+      height: 65px;
+      display: block;
     }
 
     /* Right Sidebar */
     .sidebar {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
-      transition: border-color 0.2s ease;
+      border-radius: 12px;
+      padding: 13px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
     }
-    .card:hover { border-color: #27395c; }
-    .card-header {
+    .card-hdr {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 1.2px;
+      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
       color: var(--cyan);
       text-transform: uppercase;
     }
 
-    /* Tabs inside Card */
-    .card-nav {
-      display: flex;
-      gap: 4px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 12px;
-    }
-    .card-tab {
-      padding: 6px 12px;
-      font-size: 0.78rem;
-      color: var(--text-dim);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .card-tab:hover { color: #fff; }
-    .card-tab.active {
-      color: var(--cyan);
-      border-bottom-color: var(--cyan);
-      font-weight: 600;
-    }
-
-    /* Target Cards List */
+    /* Target Cards */
     .targets-container {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-height: 220px;
+      gap: 7px;
+      max-height: 205px;
       overflow-y: auto;
     }
     .target-card {
-      background: #0a1120;
+      background: rgba(8, 14, 28, 0.92);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 10px;
+      padding: 9px 12px;
       display: grid;
       grid-template-columns: auto 1fr auto;
       gap: 10px;
       align-items: center;
-      transition: all 0.2s ease;
+      transition: all 0.18s;
       cursor: pointer;
     }
-    .target-card:hover { border-color: var(--cyan); background: #0e172a; }
+    .target-card:hover { border-color: var(--cyan); background: rgba(0, 229, 255, 0.06); }
     .target-card.selected { border-color: var(--magenta); box-shadow: var(--glow-magenta); }
-    .target-card.alert-breach { border-color: var(--alert); background: rgba(255, 23, 68, 0.12); }
-    .target-badge {
-      font-family: monospace;
-      font-size: 0.76rem;
+    .target-card.breach { border-color: var(--alert); background: rgba(255, 23, 68, 0.12); }
+
+    .t-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
       font-weight: 800;
       padding: 5px 8px;
       border-radius: 6px;
     }
-    .badge-24g { background: rgba(0, 229, 255, 0.15); color: var(--cyan); border: 1px solid var(--cyan); }
-    .badge-60g { background: rgba(255, 179, 0, 0.15); color: var(--amber); border: 1px solid var(--amber); }
-    .badge-dual { background: rgba(224, 64, 251, 0.18); color: var(--magenta); border: 1px solid var(--magenta); box-shadow: 0 0 8px rgba(224, 64, 251, 0.3); }
+    .t24 { background: rgba(0, 229, 255, 0.12); color: var(--cyan); border: 1px solid rgba(0, 229, 255, 0.4); }
+    .t60 { background: rgba(255, 179, 0, 0.12); color: var(--amber); border: 1px solid rgba(255, 179, 0, 0.4); }
+    .tdual { background: rgba(224, 64, 251, 0.14); color: var(--magenta); border: 1px solid rgba(224, 64, 251, 0.4); }
 
-    .target-info {
-      font-family: monospace;
-      font-size: 0.8rem;
-      line-height: 1.45;
+    .t-info {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      line-height: 1.4;
     }
-    .target-status-val {
-      font-size: 0.75rem;
+    .t-stat {
+      font-size: 0.72rem;
       font-weight: 700;
       text-align: right;
     }
 
-    /* Target Detailed Inspector Modal/Card */
-    #targetInspector {
-      background: rgba(10, 16, 28, 0.95);
-      border: 1px solid var(--cyan);
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 10px;
-      font-family: monospace;
-      font-size: 0.78rem;
-      display: none;
-      animation: fadeIn 0.3s;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Multi-Zone List */
+    /* Geofence Alert Zones Section */
     .zones-list {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 170px;
+      max-height: 145px;
       overflow-y: auto;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .zone-item {
-      background: #0a1120;
+      background: rgba(8, 14, 28, 0.9);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px;
+      border-radius: 7px;
+      padding: 7px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .zone-item-color {
-      width: 12px; height: 12px;
-      border-radius: 3px;
-      display: inline-block;
-      margin-right: 6px;
+    .zone-item:hover { border-color: var(--border-hi); }
+    .zone-item.selected-zone { border-color: var(--cyan); background: rgba(0, 229, 255, 0.08); }
+    .zone-dot { width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; display: inline-block; }
+
+    .zone-coords-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: rgba(5, 9, 18, 0.8);
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #142036;
     }
 
-    /* Form Controls */
     .input-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-      font-size: 0.82rem;
+      font-size: 0.76rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
     }
     .input-val {
-      background: #0b1120;
+      background: rgba(8, 14, 28, 0.95);
       border: 1px solid var(--border);
-      color: #fff;
-      padding: 4px 8px;
-      border-radius: 4px;
-      width: 72px;
+      color: #afd4ff;
+      padding: 4px 7px;
+      border-radius: 5px;
+      width: 70px;
       text-align: right;
-      font-family: monospace;
-      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      user-select: text;
     }
-    input[type="range"] {
-      accent-color: var(--cyan);
-      cursor: pointer;
-    }
+    .input-val:focus { border-color: var(--cyan); outline: none; }
+    input[type=range] { accent-color: var(--cyan); cursor: pointer; }
 
-    /* Real-Time Dual Charts */
-    .chart-box {
-      margin-top: 10px;
-      background: #060912;
+    /* Terminal & Sniffer */
+    .terminal-box {
+      background: rgba(3, 6, 14, 0.95);
+      border: 1px solid #0e1e35;
       border-radius: 6px;
-      border: 1px solid #142036;
-      padding: 8px;
+      padding: 6px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      max-height: 48px;
+      overflow-y: auto;
+      word-break: break-all;
+      color: #38bdf8;
+      line-height: 1.4;
+      user-select: text;
     }
-    .chart-label {
-      font-size: 0.72rem;
-      color: var(--text-dim);
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-      font-family: monospace;
-    }
-    canvas.strip-chart {
-      width: 100%;
-      height: 75px;
-      display: block;
-    }
+    .terminal-box.t60 { color: var(--amber); }
 
-    /* Security Event Log */
     .event-log {
-      background: #060a12;
-      border: 1px solid #142036;
+      background: rgba(3, 6, 14, 0.95);
+      border: 1px solid #0e1e35;
       border-radius: 6px;
-      padding: 8px;
-      font-family: monospace;
-      font-size: 0.72rem;
-      max-height: 120px;
+      padding: 7px 9px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      max-height: 95px;
       overflow-y: auto;
       color: var(--text-dim);
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
+      user-select: text;
     }
-    .log-item { display: flex; gap: 8px; }
+    .log-item { display: flex; gap: 7px; }
     .log-time { color: var(--muted); }
     .log-alert { color: var(--alert); font-weight: bold; }
     .log-info { color: var(--cyan); }
+    .log-ok { color: var(--green); }
 
-    /* Raw Hex Terminal */
-    .terminal-box {
-      background: #050810;
-      border: 1px solid #121d30;
-      border-radius: 6px;
-      padding: 6px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.72rem;
-      color: #38bdf8;
-      max-height: 60px;
-      overflow-y: auto;
-      word-break: break-all;
-    }
-
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: #070c17; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
     ::-webkit-scrollbar-thumb { background: #1e2d4d; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #324772; }
-
-    @media (max-width: 1100px) {
-      .dashboard-grid { grid-template-columns: 1fr; }
-    }
   </style>
 </head>
 <body>
 
-  <!-- Intrusion Warning Header Bar -->
-  <div id="alertBanner">🚨 SECURITY PERIMETER BREACH: INTRUDER TRACKED IN RESTRICTED ZONE 🚨</div>
+<div id="alertBanner">&#x1F6A8; PERIMETER ALARM &mdash; TARGET DETECTED IN RESTRICTED ZONE &#x1F6A8;</div>
 
-  <!-- Header -->
-  <header>
-    <div class="brand">
-      <div class="radar-spinner-icon"></div>
-      <div>
-        <div class="brand-title">RADAR FUSION LABS</div>
-        <div class="brand-sub">24GHz HLK-LD2452 + 60GHz HLK-LD6003D mmWave Intelligence System</div>
-      </div>
-    </div>
-
-    <!-- Mode Selector Group -->
-    <div class="mode-bar">
-      <button class="btn btn-cyan" id="modeBtn24" onclick="setMode(0)" title="Track using 24GHz Sensor Only">24G (LD2452)</button>
-      <button class="btn btn-amber" id="modeBtn60" onclick="setMode(1)" title="Track using 60GHz Sensor Only">60G (LD6003D)</button>
-      <button class="btn btn-magenta btn-active" id="modeBtnDual" onclick="setMode(2)" title="Simultaneous Dual Sensor Spatial Fusion">DUAL FUSION</button>
-    </div>
-
-    <!-- Theme & Audio & Connection -->
-    <div class="conn-group">
-      <!-- Theme Switcher -->
-      <select id="themeSelect" class="btn" onchange="changeTheme(this.value)" style="padding: 5px 8px; font-size: 0.75rem;">
-        <option value="cyber">Cyberpunk Dark</option>
-        <option value="military">Military HUD</option>
-        <option value="void">Deep Void</option>
-      </select>
-
-      <!-- Audio Mute -->
-      <button class="btn" id="audioToggleBtn" onclick="toggleAudio()" title="Toggle Web Acoustic Alarm">
-        <span id="audioIcon">🔊</span>
-      </button>
-
-      <!-- Connection Pill -->
-      <div class="status-pill">
-        <div class="status-dot" id="statusDot"></div>
-        <span id="statusText">Disconnected</span>
-      </div>
-
-      <input type="text" id="espIpInput" class="conn-input" placeholder="ESP32 IP or Host">
-      <button class="btn btn-cyan" id="connectBtn" onclick="toggleConnect()">Connect</button>
-    </div>
-  </header>
-
-  <!-- Main Grid -->
-  <div class="dashboard-grid">
-
-    <!-- Left: Radar Viewport Card -->
-    <div class="radar-card">
-      <div class="radar-toolbar">
-        <div style="font-size: 0.88rem; font-weight: 800; color: var(--cyan); letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
-          <span>SPATIAL PLANAR HUD PROJECTION</span>
-          <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: normal;">(Azimuth: ±60° | Elevation: ±30°)</span>
-        </div>
-
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <!-- Display Toggle Toggles -->
-          <button class="btn" id="btnToggleRays" onclick="toggleOption('showRays')">Rays</button>
-          <button class="btn" id="btnToggleGrid" onclick="toggleOption('showGrid')">Grid</button>
-          <button class="btn" id="btnToggleTrails" onclick="toggleOption('showTrails')">Trails</button>
-          <button class="btn" id="btnToggleSweep" onclick="toggleOption('showSweep')">Sweep</button>
-          <button class="btn btn-cyan" id="btnDrawZone" onclick="toggleDrawZoneMode()">+ Draw Zone</button>
-        </div>
-      </div>
-
-      <!-- Radar Canvas Wrapper -->
-      <div class="canvas-container" id="canvasWrapper" 
-           onmousemove="onCanvasMouseMove(event)" 
-           onmousedown="onCanvasMouseDown(event)"
-           onmouseup="onCanvasMouseUp(event)"
-           onmouseleave="onCanvasMouseLeave(event)">
-        <canvas id="radarCanvas"></canvas>
-
-        <!-- Top Left Radar Status HUD -->
-        <div class="radar-hud-overlay">
-          <div>RANGE SCALE : <span id="hudRangeVal">6.0 m</span></div>
-          <div>SWEEP SPEED : <span id="hudSweepSpd">10 Hz</span></div>
-          <div>CONFIDENCE  : <span id="hudConfidence">99% (DUAL)</span></div>
-          <div>FOV AZIMUTH : <span>120° ARC</span></div>
-        </div>
-
-        <!-- Canvas Cursor Position Tracker -->
-        <div class="canvas-cursor-info" id="cursorInfo">X: 0.00m | Y: 0.00m | R: 0.00m</div>
-
-        <!-- Tip for drawing zones -->
-        <div class="zone-draw-tip" id="drawZoneTip">Tip: Click and drag on the radar canvas to create custom alert zones</div>
-      </div>
-
-      <!-- Bottom Dual Real-Time Charts -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
-        <div class="chart-box">
-          <div class="chart-label">
-            <span>DISTANCE (m) OVER TIME</span>
-            <span id="chartFpsBadge">-- FPS</span>
-          </div>
-          <canvas id="distanceChart" class="strip-chart"></canvas>
-        </div>
-        <div class="chart-box">
-          <div class="chart-label">
-            <span>VELOCITY (m/s) OVER TIME</span>
-            <span id="chartSpdBadge">0.00 m/s</span>
-          </div>
-          <canvas id="velocityChart" class="strip-chart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right: Telemetry & Controls Sidebar -->
-    <div class="sidebar">
-
-      <!-- 1. Tracked Targets Card -->
-      <div class="card">
-        <div class="card-header">
-          <span>Active Targets</span>
-          <span id="targetCountBadge" style="color: var(--cyan); font-family: monospace;">0 Detected</span>
-        </div>
-
-        <!-- Individual Focus Selector Bar -->
-        <div style="display: flex; gap: 4px; margin-bottom: 8px;">
-          <button class="btn btn-active" style="flex: 1; padding: 4px;" id="focusAll" onclick="setTrackFocus(-1)">All</button>
-          <button class="btn" style="flex: 1; padding: 4px;" id="focusT1" onclick="setTrackFocus(1)">T1</button>
-          <button class="btn" style="flex: 1; padding: 4px;" id="focusT2" onclick="setTrackFocus(2)">T2</button>
-          <button class="btn" style="flex: 1; padding: 4px;" id="focusT3" onclick="setTrackFocus(3)">T3</button>
-        </div>
-
-        <!-- Targets List -->
-        <div class="targets-container" id="targetsList">
-          <div style="color: var(--muted); font-size: 0.8rem; text-align: center; padding: 24px;">
-            Awaiting Radar Echoes...
-          </div>
-        </div>
-
-        <!-- Inspector Card for Clicked Target -->
-        <div id="targetInspector">
-          <div style="display:flex; justify-content:space-between; margin-bottom:6px; color:var(--cyan); font-weight:bold;">
-            <span id="inspTitle">TARGET DETAILS</span>
-            <span style="cursor:pointer;" onclick="closeInspector()">✕</span>
-          </div>
-          <div id="inspContent">Select target to view detailed analytics</div>
-        </div>
-      </div>
-
-      <!-- 2. Customizable Alert Zones Manager -->
-      <div class="card">
-        <div class="card-header">
-          <span>Geofence Alert Zones</span>
-          <button class="btn" style="font-size: 0.72rem; padding: 3px 8px;" onclick="addPresetZone('Doorway')">+ Doorway</button>
-        </div>
-
-        <!-- Zones List -->
-        <div class="zones-list" id="zonesList">
-          <!-- Populated dynamically -->
-        </div>
-
-        <!-- Active Zone Coordinates Editor -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-          <div class="input-row">
-            <span>X Min (m):</span>
-            <input type="number" step="0.2" class="input-val" id="zoneXMin" value="-1.5" onchange="syncCurrentZone()">
-          </div>
-          <div class="input-row">
-            <span>X Max (m):</span>
-            <input type="number" step="0.2" class="input-val" id="zoneXMax" value="1.5" onchange="syncCurrentZone()">
-          </div>
-          <div class="input-row">
-            <span>Y Min (m):</span>
-            <input type="number" step="0.2" class="input-val" id="zoneYMin" value="1.0" onchange="syncCurrentZone()">
-          </div>
-          <div class="input-row">
-            <span>Y Max (m):</span>
-            <input type="number" step="0.2" class="input-val" id="zoneYMax" value="3.5" onchange="syncCurrentZone()">
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. Radar Calibration & Sensor Fusion Weights -->
-      <div class="card">
-        <div class="card-header">
-          <span>Radar Calibration & Fusion</span>
-        </div>
-
-        <div class="input-row">
-          <span>Max Range Zoom:</span>
-          <input type="range" id="zoomSlider" min="2" max="8" step="1" value="6" oninput="onZoomChange(this.value)">
-          <span id="zoomLabel" class="input-val" style="width: 45px;">6m</span>
-        </div>
-
-        <div class="input-row">
-          <span>Trail Length:</span>
-          <input type="range" id="trailSlider" min="4" max="25" step="1" value="12" oninput="trailLength = parseInt(this.value)">
-          <span id="trailLabel" class="input-val" style="width: 45px;">12</span>
-        </div>
-
-        <div class="input-row">
-          <span>Fusion Weight (24G / 60G):</span>
-          <input type="range" id="fusionSlider" min="0" max="100" value="50" oninput="updateFusionWeight(this.value)">
-          <span id="fusionLabel" class="input-val" style="width: 45px;">50/50</span>
-        </div>
-      </div>
-
-      <!-- 4. Security & Detection Event Log -->
-      <div class="card">
-        <div class="card-header">
-          <span>Detection Event Log</span>
-          <button class="btn" style="font-size: 0.72rem; padding: 2px 8px;" onclick="exportLogCSV()">Export CSV</button>
-        </div>
-        <div class="event-log" id="eventLog">
-          <div class="log-item">
-            <span class="log-time">[System]</span>
-            <span class="log-info">Radar Fusion Web Console Initialized.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5. Sensor Raw Data Sniffer -->
-      <div class="card">
-        <div class="card-header">
-          <span>Raw UART Packet Sniffer</span>
-        </div>
-        <div style="font-size: 0.72rem; color: var(--cyan); margin-bottom: 2px;">HLK-LD2452 (24GHz @ 256000 bps):</div>
-        <div class="terminal-box" id="raw24Terminal">Waiting for UART stream...</div>
-
-        <div style="font-size: 0.72rem; color: var(--amber); margin-top: 6px; margin-bottom: 2px;">HLK-LD6003D (60GHz @ 115200 bps):</div>
-        <div class="terminal-box" id="raw60Terminal">Waiting for UART stream...</div>
-      </div>
-
+<header>
+  <div class="brand">
+    <div class="radar-icon"></div>
+    <div>
+      <div class="brand-title">RADAR FUSION OS</div>
+      <div class="brand-sub">HLK-LD2452 24GHz + HLK-LD6003D 60GHz // mmWave Spatial Intelligence</div>
     </div>
   </div>
 
-  <script>
-    // =========================================================================
-    //  GLOBAL APPLICATION STATE
-    // =========================================================================
-    let socket = null;
-    let isConnected = false;
-    let sweepAngle = -60;
-    let sweepDir = 1;
-    let isDrawingZone = false;
-    let drawStart = null, drawCurrent = null;
-    let selectedTargetId = null;
-    let trailLength = 12;
-    let audioMuted = false;
+  <!-- Mode Selector Buttons -->
+  <div class="mode-bar">
+    <button class="mode-btn active-24" id="modeBtn24" onclick="selectMode(0)">&#x26A1; 24G ONLY</button>
+    <button class="mode-btn" id="modeBtn60" onclick="selectMode(1)">&#x1F536; 60G ONLY</button>
+    <button class="mode-btn" id="modeBtnDual" onclick="selectMode(2)">&#x2726; DUAL FUSION</button>
+  </div>
 
-    // Display Options
-    let options = {
-      showRays: true,
-      showGrid: true,
-      showTrails: true,
-      showSweep: true
-    };
+  <div class="conn-group">
+    <select id="themeSelect" class="btn" onchange="changeTheme(this.value)" style="padding:5px 8px;">
+      <option value="cyber">Cyberpunk</option>
+      <option value="military">Military</option>
+      <option value="void">Deep Void</option>
+    </select>
+    <button class="btn" id="audioBtn" onclick="toggleAudio()">&#x1F50A;</button>
+    <div class="status-pill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Offline</span>
+    </div>
+    <button class="btn btn-cyan" id="usbBtn" onclick="connectSerial()" style="font-weight:800;">&#x26A1; Connect USB</button>
+    <button class="btn" id="demoBtn" onclick="toggleSimMode()">Simulate</button>
+  </div>
+</header>
 
-    // System Telemetry Data
-    let telemetry = {
-      mode: 2,
-      range: 6.0,
-      grid: true,
-      fps: 0,
-      alert: false,
-      targets: [],
-      raw24: "",
-      raw60: ""
-    };
+<div class="dashboard-grid">
+  <!-- Left Radar Card -->
+  <div class="radar-card">
+    <div class="radar-toolbar">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.84rem;font-weight:800;color:var(--cyan);letter-spacing:1.2px;">
+        PLANAR SPATIAL HUD <span style="font-size:0.68rem;color:var(--text-dim);font-weight:400;">(Azimuth &plusmn;60&deg; | Range: 1.0m &ndash; 6.0m)</span>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="btn btn-cyan btn-active" id="btnRays" onclick="toggleOpt('rays')">Rays</button>
+        <button class="btn btn-cyan btn-active" id="btnGrid" onclick="toggleOpt('grid')">Grid</button>
+        <button class="btn btn-cyan btn-active" id="btnTrails" onclick="toggleOpt('trails')">Trails</button>
+        <button class="btn btn-cyan btn-active" id="btnSweep" onclick="toggleOpt('sweep')">Sweep</button>
+        <button class="btn btn-cyan" id="btnDraw" onclick="toggleDrawMode()">+ Mark Area / Zone</button>
+      </div>
+    </div>
 
-    // Multi-Zone Definitions
-    let zones = [
-      { id: 1, name: "Perimeter Alert", enabled: true, color: "#ff1744", xMin: -1.5, xMax: 1.5, yMin: 1.0, yMax: 3.5 }
-    ];
+    <!-- Canvas Wrapper with Crosshair Pointer and Draw Logic -->
+    <div class="canvas-container" id="canvasWrap">
+      <canvas id="radarCanvas"></canvas>
+      
+      <div class="hud-box hud-tl">
+        <div>RANGE : <span id="hudRange">6.0 m</span></div>
+        <div>MODE  : <span id="hudMode">24G ONLY</span></div>
+        <div>CONF  : <span id="hudConf">95% (24G Doppler)</span></div>
+        <div>FPS   : <span id="hudFps">--</span></div>
+      </div>
 
-    // Strip Chart History Buffers
-    const chartLen = 80;
-    let distHistory = Array(chartLen).fill(0);
-    let speedHistory = Array(chartLen).fill(0);
-    let eventLogs = [];
+      <div class="hud-box hud-br" id="cursorInfo">X: 0.00m | Y: 0.00m | R: 0.00m</div>
+      <div class="zone-banner" id="zoneBanner">&#x270F;&#xFE0F; DRAG ON CANVAS TO MARK NEW ZONE</div>
+    </div>
 
-    // Web Audio Synthesizer
-    let audioCtx = null;
-    let lastAlertSoundTime = 0;
+    <!-- Telemetry Strip Charts -->
+    <div class="charts-row">
+      <div class="chart-box">
+        <div class="chart-label"><span>DISTANCE TRACK (m)</span><span id="distBadge">0.00 m</span></div>
+        <canvas id="distChart" class="strip-chart"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label"><span>RADIAL VELOCITY (m/s)</span><span id="spdBadge">0.00 m/s</span></div>
+        <canvas id="velChart" class="strip-chart"></canvas>
+      </div>
+    </div>
+  </div>
 
-    function playAlertSiren() {
-      if (audioMuted) return;
-      let now = Date.now();
-      if (now - lastAlertSoundTime < 350) return;
-      lastAlertSoundTime = now;
-
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.25);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
-      } catch (e) {}
-    }
-
-    function toggleAudio() {
-      audioMuted = !audioMuted;
-      document.getElementById('audioIcon').innerText = audioMuted ? '🔇' : '🔊';
-    }
-
-    // =========================================================================
-    //  INITIALIZATION
-    // =========================================================================
-    window.onload = () => {
-      let host = window.location.host;
-      if (host && host.length > 2) {
-        document.getElementById('espIpInput').value = host;
-      } else {
-        document.getElementById('espIpInput').value = '192.168.4.1';
-      }
-
-      initCanvases();
-      renderZonesList();
-      requestAnimationFrame(mainAnimationLoop);
-
-      // Auto-connect if hosted directly on ESP32
-      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-        toggleConnect();
-      }
-    };
-
-    function changeTheme(theme) {
-      document.body.className = '';
-      if (theme === 'military') document.body.classList.add('theme-military');
-      else if (theme === 'void') document.body.classList.add('theme-void');
-    }
-
-    // =========================================================================
-    //  WEBSOCKET CONNECTION & COMMANDS
-    // =========================================================================
-    function toggleConnect() {
-      if (isConnected) {
-        if (socket) socket.close();
-      } else {
-        let ip = document.getElementById('espIpInput').value.trim();
-        let url = ip.startsWith('ws://') ? ip : ('ws://' + ip + '/ws');
-        connectSocket(url);
-      }
-    }
-
-    function connectSocket(url) {
-      document.getElementById('statusText').innerText = "Connecting...";
-      document.getElementById('connectBtn').innerText = "Cancel";
-
-      try {
-        socket = new WebSocket(url);
-        socket.onopen = () => {
-          isConnected = true;
-          document.getElementById('statusDot').className = "status-dot connected";
-          document.getElementById('statusText').innerText = "Online";
-          document.getElementById('connectBtn').innerText = "Disconnect";
-          addEventLog("Connected to ESP32 Radar Fusion Engine.", "info");
-        };
-        socket.onclose = () => {
-          isConnected = false;
-          document.getElementById('statusDot').className = "status-dot";
-          document.getElementById('statusText').innerText = "Disconnected";
-          document.getElementById('connectBtn').innerText = "Connect";
-          addEventLog("WebSocket disconnected.", "muted");
-        };
-        socket.onerror = (err) => console.error("WS Err:", err);
-        socket.onmessage = (e) => {
-          try {
-            let msg = JSON.parse(e.data);
-            processTelemetry(msg);
-          } catch(err) {}
-        };
-      } catch (e) { console.error(e); }
-    }
-
-    function sendCmd(obj) {
-      if (socket && isConnected && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(obj));
-      }
-    }
-
-    function setMode(m) {
-      sendCmd({ cmd: "set_mode", val: m });
-      telemetry.mode = m;
-      updateModeButtons();
-    }
-
-    function updateModeButtons() {
-      ['modeBtn24', 'modeBtn60', 'modeBtnDual'].forEach((id, i) => {
-        let btn = document.getElementById(id);
-        if (telemetry.mode === i) btn.classList.add('btn-active');
-        else btn.classList.remove('btn-active');
-      });
-      let modeNames = ["24GHz HLK-LD2452", "60GHz HLK-LD6003D", "DUAL FUSED mmWave"];
-      document.getElementById('hudConfidence').innerText = telemetry.mode === 2 ? "99% (DUAL)" : "85% (SINGLE)";
-    }
-
-    function setTrackFocus(id) {
-      sendCmd({ cmd: "set_track", val: id });
-      ['focusAll', 'focusT1', 'focusT2', 'focusT3'].forEach(i => document.getElementById(i).classList.remove('btn-active'));
-      if (id === -1) document.getElementById('focusAll').classList.add('btn-active');
-      else if (id === 1) document.getElementById('focusT1').classList.add('btn-active');
-      else if (id === 2) document.getElementById('focusT2').classList.add('btn-active');
-      else if (id === 3) document.getElementById('focusT3').classList.add('btn-active');
-    }
-
-    function onZoomChange(val) {
-      let r = parseFloat(val);
-      document.getElementById('zoomLabel').innerText = r + 'm';
-      document.getElementById('hudRangeVal').innerText = r + '.0 m';
-      sendCmd({ cmd: "set_range", val: r });
-      telemetry.range = r;
-    }
-
-    function updateFusionWeight(val) {
-      document.getElementById('fusionLabel').innerText = val + '/' + (100 - val);
-    }
-
-    function toggleOption(opt) {
-      options[opt] = !options[opt];
-      let btnMap = {
-        showRays: 'btnToggleRays',
-        showGrid: 'btnToggleGrid',
-        showTrails: 'btnToggleTrails',
-        showSweep: 'btnToggleSweep'
-      };
-      let btn = document.getElementById(btnMap[opt]);
-      if (options[opt]) btn.classList.add('btn-active');
-      else btn.classList.remove('btn-active');
-    }
-
-    // =========================================================================
-    //  TELEMETRY & LOGGING PROCESSOR
-    // =========================================================================
-    function processTelemetry(data) {
-      telemetry = data;
-
-      // Update Top HUD
-      document.getElementById('chartFpsBadge').innerText = Math.round(data.fps || 0) + " FPS";
-      updateModeButtons();
-
-      // Check Zone Breaches
-      let anyBreach = false;
-      let targets = data.targets || [];
-
-      targets.forEach(t => {
-        zones.forEach(z => {
-          if (z.enabled && t.x >= z.xMin && t.x <= z.xMax && t.y >= z.yMin && t.y <= z.yMax) {
-            t.inZone = true;
-            anyBreach = true;
-          }
-        });
-      });
-
-      // Handle Breach Alert Banner & Audio
-      let alertBanner = document.getElementById('alertBanner');
-      if (anyBreach) {
-        alertBanner.style.display = 'block';
-        document.body.classList.add('perimeter-breached');
-        document.getElementById('statusDot').className = "status-dot breach";
-        playAlertSiren();
-        if (!data.alertLogged) {
-          addEventLog(`Intruder detected in zone at (${targets[0].x.toFixed(2)}m, ${targets[0].y.toFixed(2)}m)`, "alert");
-          data.alertLogged = true;
-        }
-      } else {
-        alertBanner.style.display = 'none';
-        document.body.classList.remove('perimeter-breached');
-        if (isConnected) document.getElementById('statusDot').className = "status-dot connected";
-      }
-
-      // Update Target Cards
-      updateTargetsList(targets);
-
-      // Update Inspector if open
-      if (selectedTargetId !== null) {
-        let tgt = targets.find(t => t.id === selectedTargetId);
-        if (tgt) renderTargetInspector(tgt);
-      }
-
-      // Update Raw Telemetry
-      if (data.raw24) document.getElementById('raw24Terminal').innerText = data.raw24;
-      if (data.raw60) document.getElementById('raw60Terminal').innerText = data.raw60;
-
-      // Push to Strip Charts
-      let primaryDist = targets.length > 0 ? targets[0].dist : 0;
-      let primarySpd = targets.length > 0 ? targets[0].spd : 0;
-      distHistory.shift(); distHistory.push(primaryDist);
-      speedHistory.shift(); speedHistory.push(primarySpd);
-      document.getElementById('chartSpdBadge').innerText = (primarySpd >= 0 ? '+' : '') + primarySpd.toFixed(2) + " m/s";
-    }
-
-    function updateTargetsList(targets) {
-      let container = document.getElementById('targetsList');
-      document.getElementById('targetCountBadge').innerText = targets.length + " Detected";
-
-      if (targets.length === 0) {
-        container.innerHTML = `<div style="color: var(--muted); font-size: 0.8rem; text-align: center; padding: 20px;">No active radar echoes</div>`;
-        return;
-      }
-
-      let html = '';
-      targets.forEach(t => {
-        let isSel = (t.id === selectedTargetId);
-        let badgeClass = (t.src === 3) ? "target-badge badge-dual" : (t.src === 2) ? "target-badge badge-60g" : "target-badge badge-24g";
-        let srcName = (t.src === 3) ? "DUAL" : (t.src === 2) ? "60G" : "24G";
-        let breachClass = t.inZone ? "alert-breach" : "";
-        let selClass = isSel ? "selected" : "";
-
-        html += `
-          <div class="target-card ${breachClass} ${selClass}" onclick="openTargetInspector(${t.id})">
-            <div class="${badgeClass}">T${t.id} [${srcName}]</div>
-            <div class="target-info">
-              <div><strong>Dist:</strong> ${t.dist.toFixed(2)}m | <strong>Ang:</strong> ${t.ang > 0 ? '+' : ''}${t.ang.toFixed(1)}°</div>
-              <div style="color: var(--text-dim);">X: ${t.x > 0 ? '+' : ''}${t.x.toFixed(2)}m | Y: ${t.y.toFixed(2)}m | Spd: ${t.spd > 0 ? '+' : ''}${t.spd.toFixed(2)}m/s</div>
-            </div>
-            <div class="target-status-val">
-              <div style="color: ${t.inZone ? 'var(--alert)' : 'var(--green)'};">${t.inZone ? 'BREACH' : t.conf + '%'}</div>
-              <div style="font-size: 0.68rem; color: var(--muted);">${t.spd < -0.05 ? 'Approaching' : t.spd > 0.05 ? 'Receding' : 'Static'}</div>
-            </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    function openTargetInspector(id) {
-      selectedTargetId = id;
-      document.getElementById('targetInspector').style.display = 'block';
-      let tgt = telemetry.targets.find(t => t.id === id);
-      if (tgt) renderTargetInspector(tgt);
-    }
-
-    function closeInspector() {
-      selectedTargetId = null;
-      document.getElementById('targetInspector').style.display = 'none';
-    }
-
-    function renderTargetInspector(t) {
-      document.getElementById('inspTitle').innerText = `TARGET #${t.id} TELEMETRY HUD`;
-      let speedKmh = (t.spd * 3.6).toFixed(1);
-      document.getElementById('inspContent').innerHTML = `
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 4px; line-height: 1.5;">
-          <div>Radial Distance : <span style="color:var(--cyan)">${t.dist.toFixed(2)} m</span></div>
-          <div>Azimuth Angle   : <span style="color:var(--cyan)">${t.ang > 0 ? '+' : ''}${t.ang.toFixed(1)}°</span></div>
-          <div>Lateral Pos (X) : <span style="color:var(--text)">${t.x.toFixed(2)} m</span></div>
-          <div>Depth Pos (Y)   : <span style="color:var(--text)">${t.y.toFixed(2)} m</span></div>
-          <div>Velocity (m/s)  : <span style="color:var(--amber)">${t.spd.toFixed(2)} m/s</span></div>
-          <div>Velocity (km/h) : <span style="color:var(--amber)">${speedKmh} km/h</span></div>
-          <div>Sensor Source   : <span style="color:var(--magenta)">${t.src===3?'Dual Fused':t.src===2?'60G Radar':'24G Radar'}</span></div>
-          <div>Confidence      : <span style="color:var(--green)">${t.conf}%</span></div>
+  <!-- Right Sidebar -->
+  <div class="sidebar">
+    <!-- Active Targets Card -->
+    <div class="card">
+      <div class="card-hdr">
+        <span>Active Targets</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="sensorBadge" style="font-size:0.68rem;padding:2px 7px;border-radius:10px;font-weight:700;" class="t24">24G</span>
+          <span id="tgtCountBadge" style="color:var(--cyan);font-weight:700;">0 Detected</span>
         </div>
-      `;
-    }
+      </div>
 
-    // =========================================================================
-    //  ZONES MANAGEMENT
-    // =========================================================================
-    function renderZonesList() {
-      let div = document.getElementById('zonesList');
-      div.innerHTML = '';
-      zones.forEach((z, idx) => {
-        div.innerHTML += `
-          <div class="zone-item">
-            <div style="display:flex; align-items:center;">
-              <span class="zone-item-color" style="background:${z.color};"></span>
-              <strong>${z.name}</strong>
-            </div>
-            <div style="display:flex; gap: 6px; align-items: center;">
-              <label style="font-size: 0.72rem; cursor: pointer;">
-                <input type="checkbox" ${z.enabled ? 'checked' : ''} onchange="toggleZone(${idx})"> Active
-              </label>
-              <button class="btn" style="padding: 2px 6px; font-size: 0.7rem;" onclick="removeZone(${idx})">✕</button>
-            </div>
-          </div>
-        `;
-      });
-    }
+      <div style="display:flex;gap:4px;margin-bottom:8px;">
+        <button class="btn btn-cyan btn-active" style="flex:1;padding:4px;" id="focusAll" onclick="setFocus(-1)">All</button>
+        <button class="btn" style="flex:1;padding:4px;" id="focusT1" onclick="setFocus(1)">T1</button>
+        <button class="btn" style="flex:1;padding:4px;" id="focusT2" onclick="setFocus(2)">T2</button>
+        <button class="btn" style="flex:1;padding:4px;" id="focusT3" onclick="setFocus(3)">T3</button>
+      </div>
 
-    function toggleZone(idx) {
-      zones[idx].enabled = !zones[idx].enabled;
-      syncCurrentZone();
-    }
+      <div class="targets-container" id="tgtList">
+        <div style="color:var(--muted);font-size:0.76rem;text-align:center;padding:18px;">Awaiting radar telemetry...</div>
+      </div>
+    </div>
 
-    function removeZone(idx) {
-      zones.splice(idx, 1);
-      renderZonesList();
-      syncCurrentZone();
-    }
+    <!-- Geofence Alert Zones Card -->
+    <div class="card">
+      <div class="card-hdr">
+        <span>Geofence Alert Zones</span>
+        <div style="display:flex;gap:4px;">
+          <button class="btn" style="font-size:0.65rem;padding:2px 7px;" onclick="addPresetZone('door')">+ Door</button>
+          <button class="btn" style="font-size:0.65rem;padding:2px 7px;" onclick="addPresetZone('desk')">+ Desk</button>
+        </div>
+      </div>
 
-    function addPresetZone(type) {
-      let newZ = {
-        id: zones.length + 1,
-        name: type + " #" + (zones.length + 1),
+      <div class="zones-list" id="zonesList"></div>
+
+      <!-- Selected Zone Coordinates -->
+      <div class="zone-coords-grid">
+        <div class="input-row"><span>X Min:</span><input class="input-val" id="zXMin" type="number" step="0.1" value="-1.2" oninput="updateActiveZoneCoord()"></div>
+        <div class="input-row"><span>X Max:</span><input class="input-val" id="zXMax" type="number" step="0.1" value="1.2" oninput="updateActiveZoneCoord()"></div>
+        <div class="input-row"><span>Y Min:</span><input class="input-val" id="zYMin" type="number" step="0.1" value="1.0" oninput="updateActiveZoneCoord()"></div>
+        <div class="input-row"><span>Y Max:</span><input class="input-val" id="zYMax" type="number" step="0.1" value="3.0" oninput="updateActiveZoneCoord()"></div>
+      </div>
+    </div>
+
+    <!-- Calibration & Fusion Sliders -->
+    <div class="card">
+      <div class="card-hdr">Radar Calibration</div>
+      <div class="input-row" style="margin-bottom:7px;">
+        <span>Max Range:</span>
+        <input type="range" id="zoomSlider" min="2" max="8" step="1" value="6" oninput="onZoom(this.value)" style="flex:1;margin:0 8px;">
+        <span id="zoomLabel" class="input-val" style="width:44px;">6m</span>
+      </div>
+      <div class="input-row" style="margin-bottom:7px;">
+        <span>Trail Length:</span>
+        <input type="range" id="trailSlider" min="4" max="35" step="1" value="16" oninput="trailLen=+this.value;document.getElementById('trailLabel').innerText=this.value;" style="flex:1;margin:0 8px;">
+        <span class="input-val" style="width:44px;" id="trailLabel">16</span>
+      </div>
+    </div>
+
+    <!-- 60GHz Hardware Control & Sniffer -->
+    <div class="card">
+      <div class="card-hdr">
+        <span>Raw UART Sniffer &amp; 60G Controls</span>
+      </div>
+
+      <!-- Quick Action Buttons for 60G Setup -->
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn" style="font-size:0.65rem;padding:3px 7px;" onclick="sendSerialCmd('CMD:SWAP60')">&#x21C4; Swap 60G Pins</button>
+        <button class="btn" style="font-size:0.65rem;padding:3px 7px;" onclick="sendSerialCmd('CMD:BAUD60,115200')">60G 115200</button>
+        <button class="btn" style="font-size:0.65rem;padding:3px 7px;" onclick="sendSerialCmd('CMD:BAUD60,256000')">60G 256000</button>
+        <button class="btn" style="font-size:0.65rem;padding:3px 7px;" onclick="sendSerialCmd('CMD:PING60')">Query 60G</button>
+      </div>
+
+      <div style="font-size:0.68rem;color:var(--cyan);margin-bottom:3px;display:flex;justify-content:space-between;">
+        <span>LD2452 24GHz @ 256000 bps:</span>
+        <span id="cnt24" style="color:var(--text-dim);">0 pkts</span>
+      </div>
+      <div class="terminal-box" id="term24">Waiting for 24G packets...</div>
+
+      <div style="font-size:0.68rem;color:var(--amber);margin:6px 0 3px;display:flex;justify-content:space-between;">
+        <span>LD6003D 60GHz @ 115200 bps:</span>
+        <span id="cnt60" style="color:var(--text-dim);">0 pkts</span>
+      </div>
+      <div class="terminal-box t60" id="term60">Waiting for 60G packets...</div>
+    </div>
+
+    <!-- Event Log -->
+    <div class="card">
+      <div class="card-hdr">
+        <span>Detection Event Log</span>
+        <button class="btn" style="font-size:0.65rem;padding:2px 7px;" onclick="exportLog()">CSV</button>
+      </div>
+      <div class="event-log" id="eventLog">
+        <div class="log-item"><span class="log-time">[System]</span><span class="log-info">Radar Fusion Console Initialized.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+//  GLOBAL STATE & CONFIGURATION
+// =========================================================================
+var activeMode = 0; // 0 = 24G Only, 1 = 60G Only, 2 = Dual Fusion
+var isConnected = false;
+var serialPort = null;
+var serialReader = null;
+var serialWriter = null;
+
+// Target Buffers
+var targets24 = [];
+var targets60 = [];
+var fusedTargets = [];
+
+// Movement Trails
+var trails24 = [[], [], []];
+var trails60 = [[], [], []];
+var trailLen = 16;
+
+// Geofence Alert Zones
+var zones = [
+  { id: 1, name: "Perimeter", enabled: true, color: "#ff1744", xMin: -1.5, xMax: 1.5, yMin: 1.0, yMax: 3.2 }
+];
+var selectedZoneIdx = 0;
+
+// Display & HUD options
+var opts = { rays: true, grid: true, trails: true, sweep: true };
+var maxRange = 6.0;
+var sweepAngle = -60.0;
+var sweepDir = 1;
+var selectedTgt = null;
+var focusId = -1;
+
+// History Charts
+var CLEN = 70;
+var distHist = new Array(CLEN).fill(0);
+var spdHist  = new Array(CLEN).fill(0);
+
+// Performance & Telemetry
+var frameCount = 0;
+var lastFpsTime = performance.now();
+var currentFps = 0;
+var pkts24 = 0, pkts60 = 0;
+var eventLogs = [];
+var audioMuted = false;
+var audioCtx = null;
+var lastAlertSound = 0;
+
+// Drawing & Marking Zones on Radar Canvas
+var drawMode = false;
+var isDragging = false;
+var drawStart = null;
+var drawCurrent = null;
+
+// Simulation Mode (for testing)
+var simMode = false;
+var simTimer = null;
+var simPhase = 0;
+
+// Canvas Elements
+var rCanvas, rCtx, dCanvas, dCtx, vCanvas, vCtx;
+
+// =========================================================================
+//  INITIALIZATION
+// =========================================================================
+window.onload = function() {
+  initCanvases();
+  renderZonesList();
+  selectMode(0); // Start in 24G mode
+  requestAnimationFrame(renderLoop);
+  addLog("Radar Fusion OS Dashboard Ready.", "ok");
+};
+
+function initCanvases() {
+  rCanvas = document.getElementById('radarCanvas');
+  rCtx = rCanvas.getContext('2d');
+  dCanvas = document.getElementById('distChart');
+  dCtx = dCanvas.getContext('2d');
+  vCanvas = document.getElementById('velChart');
+  vCtx = vCanvas.getContext('2d');
+
+  resizeCanvases();
+  window.addEventListener('resize', resizeCanvases);
+
+  // Canvas Mouse & Pointer Events for Drawing Zones
+  var wrap = document.getElementById('canvasWrap');
+  wrap.addEventListener('mousedown', handleMouseDown);
+  wrap.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
+}
+
+function resizeCanvases() {
+  var wrap = document.getElementById('canvasWrap');
+  var rect = wrap.getBoundingClientRect();
+  rCanvas.width = rect.width;
+  rCanvas.height = rect.height;
+
+  dCanvas.width = dCanvas.clientWidth;
+  dCanvas.height = 65;
+  vCanvas.width = vCanvas.clientWidth;
+  vCanvas.height = 65;
+}
+
+// =========================================================================
+//  MODE SWITCHING (24G / 60G / DUAL FUSION)
+// =========================================================================
+function selectMode(m) {
+  activeMode = m;
+
+  // Update button active classes
+  var b24 = document.getElementById('modeBtn24');
+  var b60 = document.getElementById('modeBtn60');
+  var bDual = document.getElementById('modeBtnDual');
+
+  b24.className = 'mode-btn' + (m === 0 ? ' active-24' : '');
+  b60.className = 'mode-btn' + (m === 1 ? ' active-60' : '');
+  bDual.className = 'mode-btn' + (m === 2 ? ' active-dual' : '');
+
+  // Update HUD text
+  var mLabels = ['24G ONLY', '60G ONLY', 'DUAL FUSION'];
+  var mConf   = ['95% (24G Doppler)', '90% (60G Beam)', '99% (Dual Spatial)'];
+  document.getElementById('hudMode').innerText = mLabels[m];
+  document.getElementById('hudConf').innerText = mConf[m];
+
+  // Update Sidebar Badge
+  var sBadge = document.getElementById('sensorBadge');
+  if (m === 0) { sBadge.className = 't-badge t24'; sBadge.innerText = '24G'; }
+  else if (m === 1) { sBadge.className = 't-badge t60'; sBadge.innerText = '60G'; }
+  else { sBadge.className = 't-badge tdual'; sBadge.innerText = 'DUAL'; }
+
+  // Send hardware command to ESP32 over serial if connected
+  if (isConnected && serialWriter) {
+    var cmdStr = (m === 0 ? 'MODE:24\n' : (m === 1 ? 'MODE:60\n' : 'MODE:DUAL\n'));
+    sendSerialCmd(cmdStr);
+  }
+
+  rebuildFusedTargets();
+  addLog("Switched display to " + mLabels[m], "info");
+}
+
+// =========================================================================
+//  COORDINATE CONVERSION (SCREEN <-> WORLD)
+// =========================================================================
+function getRadarMetrics() {
+  var w = rCanvas.width, h = rCanvas.height;
+  var ox = w / 2;
+  var oy = h - 35;
+  var pixR = Math.min(w * 0.44, h - 55);
+  return { ox: ox, oy: oy, pixR: pixR, maxR: maxRange };
+}
+
+function worldToScreen(x_m, y_m) {
+  var m = getRadarMetrics();
+  var sx = m.ox + (x_m / m.maxR) * m.pixR;
+  var sy = m.oy - (y_m / m.maxR) * m.pixR;
+  return { x: sx, y: sy };
+}
+
+function screenToWorld(px, py) {
+  var m = getRadarMetrics();
+  var x = ((px - m.ox) / m.pixR) * m.maxR;
+  var y = ((m.oy - py) / m.pixR) * m.maxR;
+  return { x: x, y: Math.max(0.05, y) };
+}
+
+function getCanvasPointer(e) {
+  var rect = rCanvas.getBoundingClientRect();
+  var scaleX = rCanvas.width / rect.width;
+  var scaleY = rCanvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+// =========================================================================
+//  ZONE DRAWING & GEOFENCE MARKING
+// =========================================================================
+function toggleDrawMode() {
+  drawMode = !drawMode;
+  var btn = document.getElementById('btnDraw');
+  var banner = document.getElementById('zoneBanner');
+
+  if (drawMode) {
+    btn.classList.add('btn-active');
+    btn.innerText = 'Drawing Active... (Drag)';
+    banner.style.display = 'block';
+  } else {
+    btn.classList.remove('btn-active');
+    btn.innerText = '+ Mark Area / Zone';
+    banner.style.display = 'none';
+    isDragging = false;
+    drawStart = null;
+    drawCurrent = null;
+  }
+}
+
+function handleMouseDown(e) {
+  if (e.button !== 0) return; // Only left click
+  var pt = getCanvasPointer(e);
+
+  if (drawMode) {
+    isDragging = true;
+    drawStart = pt;
+    drawCurrent = pt;
+    e.preventDefault();
+  } else {
+    // Check if clicked inside an existing zone to select it
+    var wPt = screenToWorld(pt.x, pt.y);
+    for (var i = zones.length - 1; i >= 0; i--) {
+      var z = zones[i];
+      if (wPt.x >= z.xMin && wPt.x <= z.xMax && wPt.y >= z.yMin && wPt.y <= z.yMax) {
+        selectZone(i);
+        break;
+      }
+    }
+  }
+}
+
+function handleMouseMove(e) {
+  var pt = getCanvasPointer(e);
+  var wp = screenToWorld(pt.x, pt.y);
+
+  // Update cursor telemetry readout
+  document.getElementById('cursorInfo').innerText = 
+    'X: ' + (wp.x >= 0 ? '+' : '') + wp.x.toFixed(2) + 'm | Y: ' + wp.y.toFixed(2) + 'm | R: ' + Math.hypot(wp.x, wp.y).toFixed(2) + 'm';
+
+  if (drawMode && isDragging && drawStart) {
+    drawCurrent = pt;
+  }
+}
+
+function handleMouseUp(e) {
+  if (drawMode && isDragging && drawStart && drawCurrent) {
+    isDragging = false;
+    var p1 = screenToWorld(drawStart.x, drawStart.y);
+    var p2 = screenToWorld(drawCurrent.x, drawCurrent.y);
+
+    var xMin = Math.min(p1.x, p2.x);
+    var xMax = Math.max(p1.x, p2.x);
+    var yMin = Math.min(p1.y, p2.y);
+    var yMax = Math.max(p1.y, p2.y);
+
+    // Minimum size check (at least 0.3m x 0.3m to prevent zero-size clicks)
+    if ((xMax - xMin) >= 0.25 && (yMax - yMin) >= 0.25) {
+      var colors = ["#ff1744", "#ffb300", "#e040fb", "#00e5ff", "#00e676"];
+      var newZone = {
+        id: Date.now(),
+        name: "Zone #" + (zones.length + 1),
         enabled: true,
-        color: (zones.length % 2 === 0) ? "#ff1744" : "#ff9100",
-        xMin: -1.0, xMax: 1.0, yMin: 1.2, yMax: 2.8
+        color: colors[zones.length % colors.length],
+        xMin: parseFloat(xMin.toFixed(2)),
+        xMax: parseFloat(xMax.toFixed(2)),
+        yMin: parseFloat(yMin.toFixed(2)),
+        yMax: parseFloat(yMax.toFixed(2))
       };
-      zones.push(newZ);
+      zones.push(newZone);
+      selectZone(zones.length - 1);
       renderZonesList();
-      syncCurrentZone();
+      addLog('Created ' + newZone.name + ' (' + newZone.xMin + 'm to ' + newZone.xMax + 'm)', 'ok');
     }
 
-    function syncCurrentZone() {
-      if (zones.length === 0) return;
-      let z = zones[0];
-      z.xMin = parseFloat(document.getElementById('zoneXMin').value);
-      z.xMax = parseFloat(document.getElementById('zoneXMax').value);
-      z.yMin = parseFloat(document.getElementById('zoneYMin').value);
-      z.yMax = parseFloat(document.getElementById('zoneYMax').value);
+    toggleDrawMode(); // Exit draw mode after drawing
+  }
+}
 
-      // Send primary zone to ESP32 firmware
-      sendCmd({
-        cmd: "set_zone",
-        enabled: z.enabled,
-        xMin: z.xMin,
-        xMax: z.xMax,
-        yMin: z.yMin,
-        yMax: z.yMax
-      });
-    }
+function selectZone(idx) {
+  if (idx < 0 || idx >= zones.length) return;
+  selectedZoneIdx = idx;
+  var z = zones[idx];
+  document.getElementById('zXMin').value = z.xMin.toFixed(2);
+  document.getElementById('zXMax').value = z.xMax.toFixed(2);
+  document.getElementById('zYMin').value = z.yMin.toFixed(2);
+  document.getElementById('zYMax').value = z.yMax.toFixed(2);
+  renderZonesList();
+}
 
-    function toggleDrawZoneMode() {
-      isDrawingZone = !isDrawingZone;
-      let btn = document.getElementById('btnDrawZone');
-      if (isDrawingZone) {
-        btn.classList.add('btn-active');
-        btn.innerText = "Drawing (Drag)...";
-        document.getElementById('drawZoneTip').style.display = 'block';
+function updateActiveZoneCoord() {
+  if (zones.length === 0 || selectedZoneIdx >= zones.length) return;
+  var z = zones[selectedZoneIdx];
+  z.xMin = parseFloat(document.getElementById('zXMin').value) || 0;
+  z.xMax = parseFloat(document.getElementById('zXMax').value) || 0;
+  z.yMin = parseFloat(document.getElementById('zYMin').value) || 0;
+  z.yMax = parseFloat(document.getElementById('zYMax').value) || 0;
+  rebuildFusedTargets();
+}
+
+function renderZonesList() {
+  var div = document.getElementById('zonesList');
+  div.innerHTML = '';
+  zones.forEach(function(z, i) {
+    var isSel = (i === selectedZoneIdx);
+    var item = document.createElement('div');
+    item.className = 'zone-item' + (isSel ? ' selected-zone' : '');
+    item.onclick = function() { selectZone(i); };
+
+    item.innerHTML = 
+      '<div style="display:flex;align-items:center;">' +
+        '<span class="zone-dot" style="background:' + z.color + '"></span>' +
+        '<strong>' + z.name + '</strong>' +
+        '<span style="font-size:0.65rem;color:var(--text-dim);margin-left:6px;">[' + z.yMin + '-' + z.yMax + 'm]</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;align-items:center;">' +
+        '<label style="cursor:pointer;"><input type="checkbox" ' + (z.enabled ? 'checked' : '') + ' onchange="zones[' + i + '].enabled=this.checked;event.stopPropagation();rebuildFusedTargets();"> ON</label>' +
+        '<button class="btn btn-alert" style="padding:2px 6px;font-size:0.65rem;" onclick="removeZone(' + i + ');event.stopPropagation();">&times;</button>' +
+      '</div>';
+    div.appendChild(item);
+  });
+}
+
+function removeZone(i) {
+  zones.splice(i, 1);
+  if (selectedZoneIdx >= zones.length) selectedZoneIdx = Math.max(0, zones.length - 1);
+  if (zones.length > 0) selectZone(selectedZoneIdx);
+  renderZonesList();
+  rebuildFusedTargets();
+}
+
+function addPresetZone(type) {
+  if (type === 'door') {
+    zones.push({ id: Date.now(), name: "Doorway", enabled: true, color: "#ff1744", xMin: -0.8, xMax: 0.8, yMin: 1.2, yMax: 2.2 });
+  } else if (type === 'desk') {
+    zones.push({ id: Date.now(), name: "Desk Area", enabled: true, color: "#ffb300", xMin: 0.6, xMax: 2.0, yMin: 1.2, yMax: 2.6 });
+  }
+  selectZone(zones.length - 1);
+  renderZonesList();
+}
+
+// =========================================================================
+//  DATA FUSION & PIPELINE
+// =========================================================================
+function rebuildFusedTargets() {
+  var list = [];
+
+  if (activeMode === 0) {
+    // 24GHz Only
+    targets24.forEach(function(t, i) {
+      if (!t || !t.present) return;
+      var tr = trails24[i];
+      tr.push({ x: t.x, y: t.y });
+      if (tr.length > trailLen) tr.shift();
+
+      if (focusId === -1 || focusId === (i + 1)) {
+        list.push({
+          id: i + 1,
+          x: t.x, y: t.y,
+          dist: Math.hypot(t.x, t.y),
+          ang: Math.atan2(t.x, t.y) * 180 / Math.PI,
+          spd: t.v,
+          conf: 95,
+          src: 1, // 24G
+          inZone: false,
+          trail: tr.slice()
+        });
+      }
+    });
+  } else if (activeMode === 1) {
+    // 60GHz Only
+    targets60.forEach(function(t, i) {
+      if (!t || !t.present) return;
+      var tr = trails60[i];
+      tr.push({ x: t.x, y: t.y });
+      if (tr.length > trailLen) tr.shift();
+
+      if (focusId === -1 || focusId === (i + 1)) {
+        list.push({
+          id: i + 1,
+          x: t.x, y: t.y,
+          dist: Math.hypot(t.x, t.y),
+          ang: Math.atan2(t.x, t.y) * 180 / Math.PI,
+          spd: t.v,
+          conf: 90,
+          src: 2, // 60G
+          inZone: false,
+          trail: tr.slice()
+        });
+      }
+    });
+  } else {
+    // Dual Fusion Mode
+    var used60 = new Set();
+
+    targets24.forEach(function(t24, i) {
+      if (!t24 || !t24.present) return;
+      var tr24 = trails24[i];
+      tr24.push({ x: t24.x, y: t24.y });
+      if (tr24.length > trailLen) tr24.shift();
+
+      var srcType = 1;
+      var xF = t24.x, yF = t24.y, vF = t24.v;
+
+      for (var j = 0; j < targets60.length; j++) {
+        var t60 = targets60[j];
+        if (!t60 || !t60.present || used60.has(j)) continue;
+        var dx = t24.x - t60.x, dy = t24.y - t60.y;
+        if (Math.hypot(dx, dy) < 0.65) {
+          // Fused target: weighted average
+          xF = (t24.x * 0.4 + t60.x * 0.6);
+          yF = (t24.y * 0.4 + t60.y * 0.6);
+          vF = (t24.v * 0.7 + t60.v * 0.3);
+          srcType = 3; // Fused
+          used60.add(j);
+          break;
+        }
+      }
+
+      if (focusId === -1 || focusId === (i + 1)) {
+        list.push({
+          id: i + 1,
+          x: xF, y: yF,
+          dist: Math.hypot(xF, yF),
+          ang: Math.atan2(xF, yF) * 180 / Math.PI,
+          spd: vF,
+          conf: srcType === 3 ? 99 : 95,
+          src: srcType,
+          inZone: false,
+          trail: tr24.slice()
+        });
+      }
+    });
+
+    // Unmatched 60G targets
+    targets60.forEach(function(t60, j) {
+      if (!t60 || !t60.present || used60.has(j)) return;
+      var tr60 = trails60[j];
+      tr60.push({ x: t60.x, y: t60.y });
+      if (tr60.length > trailLen) tr60.shift();
+
+      var nextId = list.length + 1;
+      if (focusId === -1 || focusId === nextId) {
+        list.push({
+          id: nextId,
+          x: t60.x, y: t60.y,
+          dist: Math.hypot(t60.x, t60.y),
+          ang: Math.atan2(t60.x, t60.y) * 180 / Math.PI,
+          spd: t60.v,
+          conf: 90,
+          src: 2,
+          inZone: false,
+          trail: tr60.slice()
+        });
+      }
+    });
+  }
+
+  // Geofence Boundary Check
+  var anyBreach = false;
+  list.forEach(function(t) {
+    zones.forEach(function(z) {
+      if (z.enabled && t.x >= z.xMin && t.x <= z.xMax && t.y >= z.yMin && t.y <= z.yMax) {
+        t.inZone = true;
+        anyBreach = true;
+      }
+    });
+  });
+
+  fusedTargets = list;
+  handleBreach(anyBreach);
+
+  // Update strip chart data
+  var topDist = list.length > 0 ? list[0].dist : 0;
+  var topSpd  = list.length > 0 ? list[0].spd : 0;
+  distHist.shift(); distHist.push(topDist);
+  spdHist.shift();  spdHist.push(topSpd);
+
+  document.getElementById('distBadge').innerText = topDist.toFixed(2) + ' m';
+  document.getElementById('spdBadge').innerText  = (topSpd >= 0 ? '+' : '') + topSpd.toFixed(2) + ' m/s';
+  document.getElementById('tgtCountBadge').innerText = list.length + ' Detected';
+
+  renderTargetList(list);
+}
+
+function handleBreach(breached) {
+  var banner = document.getElementById('alertBanner');
+  var dot = document.getElementById('statusDot');
+
+  if (breached) {
+    banner.style.display = 'block';
+    document.body.classList.add('perimeter-breached');
+    dot.className = 'status-dot breach';
+    playAlertSiren();
+  } else {
+    banner.style.display = 'none';
+    document.body.classList.remove('perimeter-breached');
+    dot.className = 'status-dot ' + (isConnected ? 'connected' : '');
+  }
+}
+
+function renderTargetList(targets) {
+  var div = document.getElementById('tgtList');
+  if (targets.length === 0) {
+    div.innerHTML = '<div style="color:var(--muted);text-align:center;padding:16px;">-- No radar echoes detected --</div>';
+    return;
+  }
+
+  div.innerHTML = targets.map(function(t) {
+    var badgeClass = t.src === 3 ? 'tdual' : (t.src === 2 ? 't60' : 't24');
+    var badgeName  = t.src === 3 ? 'DUAL' : (t.src === 2 ? '60G' : '24G');
+    var cardClass  = 'target-card' + (t.id === selectedTgt ? ' selected' : '') + (t.inZone ? ' breach' : '');
+
+    return '<div class="' + cardClass + '" onclick="selectedTgt=' + t.id + ';rebuildFusedTargets();">' +
+      '<div class="t-badge ' + badgeClass + '">T' + t.id + ' [' + badgeName + ']</div>' +
+      '<div class="t-info">' +
+        '<div>Dist: ' + t.dist.toFixed(2) + 'm &nbsp; Az: ' + (t.ang >= 0 ? '+' : '') + t.ang.toFixed(1) + '&deg;</div>' +
+        '<div style="color:var(--text-dim);">X: ' + (t.x >= 0 ? '+' : '') + t.x.toFixed(2) + 'm &nbsp; Y: ' + t.y.toFixed(2) + 'm &nbsp; Vel: ' + (t.spd >= 0 ? '+' : '') + t.spd.toFixed(2) + 'm/s</div>' +
+      '</div>' +
+      '<div class="t-stat">' +
+        '<div style="color:' + (t.inZone ? 'var(--alert)' : 'var(--green)') + ';">' + (t.inZone ? 'ALARM' : t.conf + '%') + '</div>' +
+        '<div style="font-size:0.65rem;color:var(--muted);">' + (t.spd < -0.05 ? 'Approach' : (t.spd > 0.05 ? 'Recede' : 'Static')) + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// =========================================================================
+//  SERIAL LINE PARSER (From ESP32)
+// =========================================================================
+function handleLine(line) {
+  line = line.trim();
+  if (!line) return;
+
+  // 24G Frame: R24,p1,x1,y1,v1,p2,x2,y2,v2,p3,x3,y3,v3 (in mm, mm, cm/s)
+  if (line.startsWith('R24,') || (line.startsWith('R,') && !line.startsWith('R60,'))) {
+    pkts24++;
+    document.getElementById('cnt24').innerText = pkts24 + ' frames';
+    document.getElementById('term24').innerText = line;
+
+    var parts = line.split(',').map(Number);
+    targets24 = [];
+    for (var t = 0; t < 3; t++) {
+      var off = 1 + t * 4;
+      if (parts[off] === 1) {
+        targets24[t] = {
+          present: true,
+          x: parts[off + 1] / 1000.0,
+          y: parts[off + 2] / 1000.0,
+          v: parts[off + 3] / 100.0
+        };
       } else {
-        btn.classList.remove('btn-active');
-        btn.innerText = "+ Draw Zone";
-        document.getElementById('drawZoneTip').style.display = 'none';
+        targets24[t] = { present: false, x: 0, y: 0, v: 0 };
       }
     }
 
-    // =========================================================================
-    //  EVENT LOG & CSV EXPORT
-    // =========================================================================
-    function addEventLog(msg, type) {
-      let now = new Date();
-      let timeStr = now.toTimeString().split(' ')[0];
-      eventLogs.push({ time: timeStr, msg: msg });
-      let div = document.getElementById('eventLog');
-      let item = document.createElement('div');
-      item.className = 'log-item';
-      item.innerHTML = `<span class="log-time">[${timeStr}]</span> <span class="${type==='alert'?'log-alert':type==='info'?'log-info':''}">${msg}</span>`;
-      div.appendChild(item);
-      div.scrollTop = div.scrollHeight;
+    // Update FPS
+    frameCount++;
+    var now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      currentFps = (frameCount * 1000) / (now - lastFpsTime);
+      frameCount = 0;
+      lastFpsTime = now;
+      document.getElementById('hudFps').innerText = currentFps.toFixed(1) + ' Hz';
     }
 
-    function exportLogCSV() {
-      let csv = "Time,Event\n";
-      eventLogs.forEach(l => { csv += `"${l.time}","${l.msg}"\n`; });
-      let blob = new Blob([csv], { type: 'text/csv' });
-      let url = URL.createObjectURL(blob);
-      let a = document.createElement('a');
-      a.href = url;
-      a.download = `Radar_Telemetry_Log_${Date.now()}.csv`;
-      a.click();
+    if (activeMode === 0 || activeMode === 2) rebuildFusedTargets();
+    return;
+  }
+
+  // 60G Frame: R60,p1,x1,y1,v1,p2,x2,y2,v2,p3,x3,y3,v3
+  if (line.startsWith('R60,')) {
+    pkts60++;
+    document.getElementById('cnt60').innerText = pkts60 + ' frames';
+    document.getElementById('term60').innerText = line;
+
+    var parts = line.split(',').map(Number);
+    targets60 = [];
+    for (var t = 0; t < 3; t++) {
+      var off = 1 + t * 4;
+      if (parts[off] === 1) {
+        targets60[t] = {
+          present: true,
+          x: parts[off + 1] / 1000.0,
+          y: parts[off + 2] / 1000.0,
+          v: parts[off + 3] / 100.0
+        };
+      } else {
+        targets60[t] = { present: false, x: 0, y: 0, v: 0 };
+      }
     }
 
-    // =========================================================================
-    //  CANVAS RENDERING ENGINE (60 FPS)
-    // =========================================================================
-    let rCanvas, rCtx, dCanvas, dCtx, vCanvas, vCtx;
+    if (activeMode === 1 || activeMode === 2) rebuildFusedTargets();
+    return;
+  }
 
-    function initCanvases() {
-      rCanvas = document.getElementById('radarCanvas');
-      rCtx = rCanvas.getContext('2d');
-      dCanvas = document.getElementById('distanceChart');
-      dCtx = dCanvas.getContext('2d');
-      vCanvas = document.getElementById('velocityChart');
-      vCtx = vCanvas.getContext('2d');
+  // Telemetry status line: S,bytes24,frames24,bytes60,frames60
+  if (line.startsWith('S,')) {
+    var p = line.split(',');
+    document.getElementById('cnt24').innerText = 'Bytes: ' + p[1] + ' | Frames: ' + p[2];
+    document.getElementById('cnt60').innerText = 'Bytes: ' + (p[3] || '0') + ' | Frames: ' + (p[4] || '0');
+    return;
+  }
 
-      resizeCanvases();
-      window.onresize = resizeCanvases;
+  // Raw Hex Dumps
+  if (line.startsWith('HEX:')) {
+    document.getElementById('term24').innerText = line;
+    return;
+  }
+  if (line.startsWith('HEX60:')) {
+    document.getElementById('term60').innerText = line;
+    return;
+  }
+  if (line.startsWith('BAUD,')) {
+    addLog('24G Baud Scan: ' + line.slice(5) + ' bps', 'info');
+    return;
+  }
+
+  // Informational / Boot messages
+  if (line.startsWith('#')) {
+    addLog(line.slice(1), 'info');
+  }
+}
+
+// =========================================================================
+//  WEB SERIAL CONNECTION (USB @ 115200)
+// =========================================================================
+async function connectSerial() {
+  if (!('serial' in navigator)) {
+    alert("Web Serial is supported on Google Chrome and Microsoft Edge on desktop.\nPlease open this page in Chrome or Edge.");
+    return;
+  }
+
+  if (serialPort) {
+    await disconnectSerial();
+    return;
+  }
+
+  try {
+    serialPort = await navigator.serial.requestPort();
+    await serialPort.open({ baudRate: 115200 });
+
+    isConnected = true;
+    document.getElementById('statusDot').className = 'status-dot connected';
+    document.getElementById('statusText').innerText = 'USB 115200';
+    document.getElementById('usbBtn').innerText = 'Disconnect';
+    document.getElementById('usbBtn').classList.add('btn-active');
+
+    // Create Writer for sending commands
+    var enc = new TextEncoderStream();
+    enc.readable.pipeTo(serialPort.writable);
+    serialWriter = enc.writable.getWriter();
+
+    addLog("Connected to ESP32 over USB Serial (115200 baud).", "ok");
+
+    // Read loop
+    var dec = new TextDecoderStream();
+    serialPort.readable.pipeTo(dec.writable);
+    serialReader = dec.readable.getReader();
+
+    var buf = '';
+    while (true) {
+      var res = await serialReader.read();
+      if (res.done) break;
+      buf += res.value;
+
+      var nl;
+      while ((nl = buf.indexOf('\n')) >= 0) {
+        var l = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (l) handleLine(l);
+      }
     }
+  } catch (err) {
+    addLog("Serial Error: " + err.message, "alert");
+    await disconnectSerial();
+  }
+}
 
-    function resizeCanvases() {
-      let wrap = document.getElementById('canvasWrapper');
-      rCanvas.width = wrap.clientWidth;
-      rCanvas.height = wrap.clientHeight;
-      dCanvas.width = dCanvas.clientWidth;
-      dCanvas.height = 75;
-      vCanvas.width = vCanvas.clientWidth;
-      vCanvas.height = 75;
+async function disconnectSerial() {
+  try {
+    if (serialReader) { await serialReader.cancel(); serialReader = null; }
+    if (serialWriter) { await serialWriter.close(); serialWriter = null; }
+    if (serialPort) { await serialPort.close(); serialPort = null; }
+  } catch (e) {}
+
+  isConnected = false;
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusText').innerText = 'Offline';
+  document.getElementById('usbBtn').innerText = 'Connect USB';
+  document.getElementById('usbBtn').classList.remove('btn-active');
+  addLog("USB Serial Disconnected.", "info");
+}
+
+async function sendSerialCmd(cmd) {
+  if (!cmd.endsWith('\n')) cmd += '\n';
+  if (serialWriter) {
+    try {
+      await serialWriter.write(cmd);
+      addLog("Sent command: " + cmd.trim(), "info");
+    } catch (e) {
+      addLog("Failed to send command: " + e.message, "alert");
     }
+  } else {
+    addLog("Not connected to USB (Command queued: " + cmd.trim() + ")", "info");
+  }
+}
 
-    function mainAnimationLoop() {
-      renderRadarCanvas();
-      renderCharts();
-      requestAnimationFrame(mainAnimationLoop);
+// =========================================================================
+//  SIMULATION MODE (For testing 24G, 60G, and Dual Fusion without HW)
+// =========================================================================
+function toggleSimMode() {
+  simMode = !simMode;
+  var btn = document.getElementById('demoBtn');
+
+  if (simMode) {
+    btn.classList.add('btn-active');
+    btn.innerText = 'Stop Sim';
+    document.getElementById('statusDot').className = 'status-dot connected';
+    document.getElementById('statusText').innerText = 'SIM ACTIVE';
+
+    simTimer = setInterval(function() {
+      simPhase += 0.05;
+
+      // Simulate 24G Targets
+      targets24 = [
+        { present: true, x: 1.4 * Math.sin(simPhase * 0.7), y: 2.8 + 1.1 * Math.cos(simPhase * 0.5), v: -0.22 * Math.cos(simPhase * 0.7) },
+        { present: true, x: -1.2 * Math.cos(simPhase * 0.4), y: 3.6 + 0.8 * Math.sin(simPhase * 0.6), v: 0.18 * Math.sin(simPhase * 0.4) },
+        { present: false, x: 0, y: 0, v: 0 }
+      ];
+
+      // Simulate 60G Targets (slightly perturbed for realistic sensor fusion)
+      targets60 = [
+        { present: true, x: 1.4 * Math.sin(simPhase * 0.7) + 0.08, y: 2.8 + 1.1 * Math.cos(simPhase * 0.5) - 0.06, v: -0.20 },
+        { present: true, x: 0.3 * Math.sin(simPhase), y: 1.8 + 0.5 * Math.sin(simPhase * 1.2), v: 0.12 },
+        { present: false, x: 0, y: 0, v: 0 }
+      ];
+
+      rebuildFusedTargets();
+    }, 60);
+
+    addLog("Simulation Mode Started: Both 24G & 60G Echoes Active.", "ok");
+  } else {
+    btn.classList.remove('btn-active');
+    btn.innerText = 'Simulate';
+    if (!isConnected) {
+      document.getElementById('statusDot').className = 'status-dot';
+      document.getElementById('statusText').innerText = 'Offline';
     }
+    if (simTimer) { clearInterval(simTimer); simTimer = null; }
+    targets24 = [];
+    targets60 = [];
+    rebuildFusedTargets();
+    addLog("Simulation Mode Stopped.", "info");
+  }
+}
 
-    function renderRadarCanvas() {
-      let w = rCanvas.width;
-      let h = rCanvas.height;
-      let ctx = rCtx;
-      ctx.clearRect(0, 0, w, h);
+// =========================================================================
+//  RADAR CANVAS RENDERING LOOP
+// =========================================================================
+function renderLoop() {
+  drawRadar();
+  drawCharts();
+  requestAnimationFrame(renderLoop);
+}
 
-      let ox = w / 2;
-      let oy = h - 35;
-      let maxPixR = Math.min(w * 0.44, h - 55);
-      let maxR = telemetry.range || 6.0;
+function drawRadar() {
+  var w = rCanvas.width, h = rCanvas.height;
+  var ctx = rCtx;
+  ctx.clearRect(0, 0, w, h);
 
-      // 1. Draw FOV Cone (-60 to +60 deg)
+  var m = getRadarMetrics();
+  var ox = m.ox, oy = m.oy, pixR = m.pixR, maxR = m.maxR;
+
+  // 1. Radar Sector Background Fill
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.arc(ox, oy, pixR, -Math.PI / 2 - Math.PI / 3, -Math.PI / 2 + Math.PI / 3);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0, 229, 255, 0.025)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0, 229, 255, 0.18)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 2. Concentric Range Rings (1m, 2m, 3m, 4m, 5m, 6m)
+  var step = maxR <= 4 ? 1 : 2;
+  for (var r = step; r <= maxR; r += step) {
+    var pr = (r / maxR) * pixR;
+    ctx.beginPath();
+    ctx.arc(ox, oy, pr, -Math.PI / 2 - Math.PI / 3, -Math.PI / 2 + Math.PI / 3);
+    ctx.strokeStyle = (r === maxR) ? 'rgba(0, 229, 255, 0.25)' : 'rgba(0, 229, 255, 0.07)';
+    ctx.lineWidth = (r === maxR) ? 1.5 : 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(r + 'm', ox + 18, oy - pr - 3);
+  }
+
+  // 3. Radial Rays (-60°, -45°, -30°, 0°, +30°, +45°, +60°)
+  if (opts.rays) {
+    [-60, -45, -30, 0, 30, 45, 60].forEach(function(deg) {
+      var rad = deg * Math.PI / 180;
+      var ex = ox + Math.sin(rad) * pixR;
+      var ey = oy - Math.cos(rad) * pixR;
       ctx.beginPath();
       ctx.moveTo(ox, oy);
-      ctx.arc(ox, oy, maxPixR, -Math.PI / 2 - (Math.PI / 3), -Math.PI / 2 + (Math.PI / 3));
-      ctx.closePath();
-      ctx.fillStyle = "rgba(0, 229, 255, 0.02)";
-      ctx.fill();
-      ctx.strokeStyle = "#16233b";
+      ctx.lineTo(ex, ey);
+      ctx.strokeStyle = (deg === 0) ? 'rgba(0, 229, 255, 0.3)' : 'rgba(0, 229, 255, 0.08)';
+      ctx.lineWidth = (deg === 0) ? 1.5 : 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '9px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(deg + '°', ex + (deg > 0 ? 12 : (deg < 0 ? -12 : 0)), ey - 6);
+    });
+  }
+
+  // 4. Cartesion Cross Grid
+  if (opts.grid) {
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.04)';
+    ctx.lineWidth = 1;
+    for (var gx = -3; gx <= 3; gx++) {
+      if (gx === 0) continue;
+      var xs = ox + (gx / maxR) * pixR;
+      ctx.beginPath();
+      ctx.moveTo(xs, oy);
+      ctx.lineTo(xs, oy - pixR);
+      ctx.stroke();
+    }
+  }
+
+  // 5. Rotating Radar Sweep Beam
+  if (opts.sweep) {
+    sweepAngle += 1.8 * sweepDir;
+    if (sweepAngle >= 60) { sweepAngle = 60; sweepDir = -1; }
+    if (sweepAngle <= -60) { sweepAngle = -60; sweepDir = 1; }
+
+    var sRad = sweepAngle * Math.PI / 180;
+    var sx = ox + Math.sin(sRad) * pixR;
+    var sy = oy - Math.cos(sRad) * pixR;
+
+    var pRad = (sweepAngle - sweepDir * 16) * Math.PI / 180;
+    var px = ox + Math.sin(pRad) * pixR;
+    var py = oy - Math.cos(pRad) * pixR;
+
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(sx, sy);
+    ctx.lineTo(px, py);
+    ctx.closePath();
+    var sg = ctx.createRadialGradient(ox, oy, 6, ox, oy, pixR);
+    var beamColor = (activeMode === 1) ? 'rgba(255, 179, 0, 0.22)' : (activeMode === 2 ? 'rgba(224, 64, 251, 0.22)' : 'rgba(0, 229, 255, 0.22)');
+    sg.addColorStop(0, beamColor);
+    sg.addColorStop(1, 'rgba(0, 229, 255, 0)');
+    ctx.fillStyle = sg;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(sx, sy);
+    ctx.strokeStyle = (activeMode === 1) ? 'rgba(255, 179, 0, 0.95)' : (activeMode === 2 ? 'rgba(224, 64, 251, 0.95)' : 'rgba(0, 229, 255, 0.95)');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // 6. Geofence Alert Zones
+  zones.forEach(function(z, idx) {
+    if (!z.enabled) return;
+    var pTopLeft = worldToScreen(z.xMin, z.yMax);
+    var pBotRight = worldToScreen(z.xMax, z.yMin);
+    var zw = pBotRight.x - pTopLeft.x;
+    var zh = pBotRight.y - pTopLeft.y;
+
+    // Background fill
+    ctx.fillStyle = z.color + '1a'; // ~10% opacity
+    ctx.fillRect(pTopLeft.x, pTopLeft.y, zw, zh);
+
+    // Border
+    ctx.strokeStyle = z.color;
+    ctx.lineWidth = (idx === selectedZoneIdx) ? 2.5 : 1.5;
+    ctx.setLineDash(idx === selectedZoneIdx ? [8, 3] : [5, 4]);
+    ctx.strokeRect(pTopLeft.x, pTopLeft.y, zw, zh);
+    ctx.setLineDash([]);
+
+    // Zone Label
+    ctx.fillStyle = z.color;
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(z.name + (idx === selectedZoneIdx ? " [SELECTED]" : ""), pTopLeft.x + 6, pTopLeft.y + 14);
+
+    // Selected zone handles
+    if (idx === selectedZoneIdx) {
+      [[pTopLeft.x, pTopLeft.y], [pBotRight.x, pTopLeft.y], [pTopLeft.x, pBotRight.y], [pBotRight.x, pBotRight.y]].forEach(function(h) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(h[0] - 3, h[1] - 3, 6, 6);
+      });
+    }
+  });
+
+  // 7. Live Drag-Box Preview while Drawing
+  if (drawMode && drawStart && drawCurrent) {
+    var x1 = Math.min(drawStart.x, drawCurrent.x);
+    var y1 = Math.min(drawStart.y, drawCurrent.y);
+    var zw = Math.abs(drawStart.x - drawCurrent.x);
+    var zh = Math.abs(drawStart.y - drawCurrent.y);
+
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.16)';
+    ctx.fillRect(x1, y1, zw, zh);
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 3]);
+    ctx.strokeRect(x1, y1, zw, zh);
+    ctx.setLineDash([]);
+
+    // Live dimensions readout
+    var sp1 = screenToWorld(drawStart.x, drawStart.y);
+    var sp2 = screenToWorld(drawCurrent.x, drawCurrent.y);
+    var wM = Math.abs(sp1.x - sp2.x).toFixed(2);
+    var hM = Math.abs(sp1.y - sp2.y).toFixed(2);
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    ctx.fillText(wM + 'm x ' + hM + 'm', x1 + 6, y1 + 16);
+  }
+
+  // 8. Plot Targets & Doppler Vectors
+  fusedTargets.forEach(function(t) {
+    var pos = worldToScreen(t.x, t.y);
+
+    // Movement History Trails
+    if (opts.trails && t.trail && t.trail.length > 1) {
+      ctx.beginPath();
+      var p0 = worldToScreen(t.trail[0].x, t.trail[0].y);
+      ctx.moveTo(p0.x, p0.y);
+      for (var k = 1; k < t.trail.length; k++) {
+        var pk = worldToScreen(t.trail[k].x, t.trail[k].y);
+        ctx.lineTo(pk.x, pk.y);
+      }
+      ctx.strokeStyle = (t.src === 3 ? 'rgba(224, 64, 251, 0.35)' : (t.src === 2 ? 'rgba(255, 179, 0, 0.35)' : 'rgba(0, 229, 255, 0.35)'));
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    var col = (t.src === 3 ? '#e040fb' : (t.src === 2 ? '#ffb300' : '#00e5ff'));
+    if (t.inZone) col = '#ff1744';
+
+    // Outer Target Halo
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, t.inZone ? 18 : 13, 0, 2 * Math.PI);
+    ctx.fillStyle = t.inZone ? 'rgba(255, 23, 68, 0.35)' : (t.src === 3 ? 'rgba(224, 64, 251, 0.22)' : 'rgba(0, 229, 255, 0.22)');
+    ctx.fill();
+
+    // Center Core Blip
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = col;
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Velocity Vector Ray
+    if (Math.abs(t.spd) > 0.05) {
+      var vr = t.ang * Math.PI / 180;
+      var vx = pos.x + Math.sin(vr) * t.spd * 28;
+      var vy = pos.y - Math.cos(vr) * t.spd * 28;
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.lineTo(vx, vy);
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.5;
       ctx.stroke();
-
-      // 2. Concentric Distance Arcs
-      let stepM = (maxR <= 4.0) ? 1.0 : 2.0;
-      for (let r = stepM; r <= maxR; r += stepM) {
-        let pixR = (r / maxR) * maxPixR;
-        ctx.beginPath();
-        ctx.arc(ox, oy, pixR, -Math.PI / 2 - (Math.PI / 3), -Math.PI / 2 + (Math.PI / 3));
-        ctx.strokeStyle = (r === maxR) ? "#1f3354" : "#132036";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Distance Labels
-        ctx.fillStyle = "#64748b";
-        ctx.font = "bold 11px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText(r.toFixed(0) + "m", ox + 18, oy - pixR);
-      }
-
-      // 3. Angular Rays (-60, -45, -30, 0, 30, 45, 60 deg)
-      if (options.showRays) {
-        [-60, -45, -30, 0, 30, 45, 60].forEach(deg => {
-          let rad = deg * (Math.PI / 180);
-          let ex = ox + Math.sin(rad) * maxPixR;
-          let ey = oy - Math.cos(rad) * maxPixR;
-
-          ctx.beginPath();
-          ctx.moveTo(ox, oy);
-          ctx.lineTo(ex, ey);
-          ctx.strokeStyle = (deg === 0) ? "#2b4166" : "#132036";
-          ctx.lineWidth = (deg === 0) ? 1.5 : 1;
-          ctx.stroke();
-
-          ctx.fillStyle = "#475569";
-          ctx.font = "10px monospace";
-          ctx.fillText(deg + "°", ex, ey - 6);
-        });
-      }
-
-      // 4. Cartesian Grid (if enabled)
-      if (options.showGrid) {
-        ctx.strokeStyle = "rgba(19, 32, 54, 0.6)";
-        ctx.lineWidth = 1;
-        for (let gx = -3; gx <= 3; gx += 1) {
-          if (gx === 0) continue;
-          let xScreen = ox + (gx / maxR) * maxPixR;
-          ctx.beginPath();
-          ctx.moveTo(xScreen, oy);
-          ctx.lineTo(xScreen, oy - maxPixR);
-          ctx.stroke();
-        }
-      }
-
-      // 5. Animated Sweeping Beam
-      if (options.showSweep) {
-        sweepAngle += 1.8 * sweepDir;
-        if (sweepAngle > 60) { sweepAngle = 60; sweepDir = -1; }
-        else if (sweepAngle < -60) { sweepAngle = -60; sweepDir = 1; }
-
-        let sRad = sweepAngle * (Math.PI / 180);
-        let sx = ox + Math.sin(sRad) * maxPixR;
-        let sy = oy - Math.cos(sRad) * maxPixR;
-
-        // Faint glowing sweep triangle
-        let prevRad = (sweepAngle - (sweepDir * 12)) * (Math.PI / 180);
-        let px = ox + Math.sin(prevRad) * maxPixR;
-        let py = oy - Math.cos(prevRad) * maxPixR;
-
-        ctx.beginPath();
-        ctx.moveTo(ox, oy);
-        ctx.lineTo(sx, sy);
-        ctx.lineTo(px, py);
-        ctx.closePath();
-        let grad = ctx.createRadialGradient(ox, oy, 10, ox, oy, maxPixR);
-        grad.addColorStop(0, "rgba(0, 229, 255, 0.25)");
-        grad.addColorStop(1, "rgba(0, 229, 255, 0.0)");
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(ox, oy);
-        ctx.lineTo(sx, sy);
-        ctx.strokeStyle = "rgba(0, 229, 255, 0.85)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      // 6. Draw Geofence Alert Zones
-      zones.forEach(z => {
-        if (!z.enabled) return;
-        let x1 = ox + (z.xMin / maxR) * maxPixR;
-        let y1 = oy - (z.yMax / maxR) * maxPixR;
-        let x2 = ox + (z.xMax / maxR) * maxPixR;
-        let y2 = oy - (z.yMin / maxR) * maxPixR;
-        let zw = x2 - x1;
-        let zh = y2 - y1;
-
-        ctx.fillStyle = z.color === "#ff1744" ? "rgba(255, 23, 68, 0.12)" : "rgba(255, 179, 0, 0.08)";
-        ctx.fillRect(x1, y1, zw, zh);
-
-        ctx.strokeStyle = z.color;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8, 4]);
-        ctx.strokeRect(x1, y1, zw, zh);
-        ctx.setLineDash([]);
-
-        // Zone Tag
-        ctx.fillStyle = z.color;
-        ctx.font = "bold 11px monospace";
-        ctx.textAlign = "left";
-        ctx.fillText(z.name, x1 + 6, y1 + 16);
-      });
-
-      // 7. Interactive Zone Drawing Preview
-      if (isDrawingZone && drawStart && drawCurrent) {
-        let x1 = Math.min(drawStart.x, drawCurrent.x);
-        let y1 = Math.min(drawStart.y, drawCurrent.y);
-        let zw = Math.abs(drawStart.x - drawCurrent.x);
-        let zh = Math.abs(drawStart.y - drawCurrent.y);
-
-        ctx.fillStyle = "rgba(0, 229, 255, 0.15)";
-        ctx.fillRect(x1, y1, zw, zh);
-        ctx.strokeStyle = "#00e5ff";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x1, y1, zw, zh);
-      }
-
-      // 8. Draw Target Blips & Trajectories
-      let targets = telemetry.targets || [];
-      targets.forEach(t => {
-        let tx = ox + (t.x / maxR) * maxPixR;
-        let ty = oy - (t.y / maxR) * maxPixR;
-
-        // Breadcrumb Trail
-        if (options.showTrails && t.trail && t.trail.length > 1) {
-          ctx.beginPath();
-          ctx.moveTo(ox + (t.trail[0].x / maxR) * maxPixR, oy - (t.trail[0].y / maxR) * maxPixR);
-          for (let k = 1; k < t.trail.length; k++) {
-            ctx.lineTo(ox + (t.trail[k].x / maxR) * maxPixR, oy - (t.trail[k].y / maxR) * maxPixR);
-          }
-          ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-
-          // Dots along trail
-          t.trail.forEach(pt => {
-            let px = ox + (pt.x / maxR) * maxPixR;
-            let py = oy - (pt.y / maxR) * maxPixR;
-            ctx.beginPath();
-            ctx.arc(px, py, 2, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(148, 163, 184, 0.5)";
-            ctx.fill();
-          });
-        }
-
-        // Color coding
-        let baseColor = (t.src === 3) ? "#e040fb" : (t.src === 2) ? "#ffb300" : "#00e5ff";
-        if (t.inZone) baseColor = "#ff1744";
-
-        // Outer Glow / Breach Pulse
-        ctx.beginPath();
-        ctx.arc(tx, ty, t.inZone ? 16 : 12, 0, Math.PI * 2);
-        ctx.fillStyle = t.inZone ? "rgba(255, 23, 68, 0.35)" : "rgba(0, 229, 255, 0.18)";
-        ctx.fill();
-
-        // Target Core Blip
-        ctx.beginPath();
-        ctx.arc(tx, ty, 6, 0, Math.PI * 2);
-        ctx.fillStyle = baseColor;
-        ctx.fill();
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Velocity Arrow
-        if (Math.abs(t.spd) > 0.05) {
-          let vRad = t.ang * (Math.PI / 180);
-          let vx = tx + Math.sin(vRad) * (t.spd * 28);
-          let vy = ty - Math.cos(vRad) * (t.spd * 28);
-          ctx.beginPath();
-          ctx.moveTo(tx, ty);
-          ctx.lineTo(vx, vy);
-          ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-
-        // Target HUD Box Label
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 11px monospace";
-        ctx.textAlign = "left";
-        let sign = t.spd > 0 ? '+' : '';
-        ctx.fillText(`T${t.id}: ${t.dist.toFixed(2)}m (${sign}${t.spd.toFixed(2)}m/s)`, tx + 12, ty);
-      });
-
-      // 9. Sensor Radar Origin Node
-      ctx.beginPath();
-      ctx.arc(ox, oy, 7, 0, Math.PI * 2);
-      ctx.fillStyle = "#00e5ff";
-      ctx.fill();
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2;
-      ctx.stroke();
     }
 
-    function renderCharts() {
-      renderSingleChart(dCanvas, dCtx, distHistory, telemetry.range || 6.0, "#00e5ff", "m");
-      renderSingleChart(vCanvas, vCtx, speedHistory, 3.0, "#ffb300", "m/s", true);
+    // Target Label
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('T' + t.id + ' ' + t.dist.toFixed(1) + 'm ' + (t.spd >= 0 ? '+' : '') + t.spd.toFixed(1) + 'm/s', pos.x + 10, pos.y - 3);
+  });
+
+  // 9. Radar Sensor Center Origin Hub
+  ctx.beginPath();
+  ctx.arc(ox, oy, 7, 0, 2 * Math.PI);
+  var og = ctx.createRadialGradient(ox, oy, 0, ox, oy, 7);
+  og.addColorStop(0, '#00e5ff');
+  og.addColorStop(1, 'rgba(0, 229, 255, 0.2)');
+  ctx.fillStyle = og;
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawCharts() {
+  drawStripChart(dCanvas, dCtx, distHist, maxRange, '#00e5ff', false);
+  drawStripChart(vCanvas, vCtx, spdHist, 3.0, '#ffb300', true);
+}
+
+function drawStripChart(c, ctx, data, maxVal, color, isBipolar) {
+  var w = c.width, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+
+  var midY = isBipolar ? (h / 2) : (h - 6);
+  ctx.strokeStyle = 'rgba(0, 229, 255, 0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, midY);
+  ctx.lineTo(w, midY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  for (var i = 0; i < data.length; i++) {
+    var x = (i / (data.length - 1)) * w;
+    var y;
+    if (isBipolar) {
+      y = midY - (data[i] / maxVal) * (h / 2 - 5);
+    } else {
+      y = h - (data[i] / maxVal) * (h - 10) - 5;
     }
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
 
-    function renderSingleChart(canv, ctx, dataArr, maxVal, color, unit, bidirectional=false) {
-      let w = canv.width;
-      let h = canv.height;
-      ctx.clearRect(0, 0, w, h);
+// =========================================================================
+//  HELPERS & UTILITIES
+// =========================================================================
+function setFocus(id) {
+  focusId = id;
+  ['focusAll', 'focusT1', 'focusT2', 'focusT3'].forEach(function(bid) {
+    document.getElementById(bid).classList.remove('btn-active');
+  });
+  if (id === -1) document.getElementById('focusAll').classList.add('btn-active');
+  else document.getElementById('focusT' + id).classList.add('btn-active');
+  rebuildFusedTargets();
+}
 
-      // Baseline
-      ctx.strokeStyle = "#16233b";
-      ctx.lineWidth = 1;
-      let midY = bidirectional ? h / 2 : h - 6;
-      ctx.beginPath();
-      ctx.moveTo(0, midY);
-      ctx.lineTo(w, midY);
-      ctx.stroke();
+function onZoom(v) {
+  maxRange = +v;
+  document.getElementById('zoomLabel').innerText = v + 'm';
+  document.getElementById('hudRange').innerText = v + '.0 m';
+}
 
-      // Plot
-      ctx.beginPath();
-      for (let i = 0; i < dataArr.length; i++) {
-        let x = (i / (dataArr.length - 1)) * w;
-        let v = dataArr[i];
-        let y = bidirectional ? midY - (v / maxVal) * (h / 2 - 6) : h - (v / maxVal) * (h - 12) - 6;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
+function toggleOpt(k) {
+  opts[k] = !opts[k];
+  var ids = { rays: 'btnRays', grid: 'btnGrid', trails: 'btnTrails', sweep: 'btnSweep' };
+  var btn = document.getElementById(ids[k]);
+  if (opts[k]) btn.classList.add('btn-active');
+  else btn.classList.remove('btn-active');
+}
 
-    // =========================================================================
-    //  CANVAS MOUSE EVENTS (COORDINATE CONVERSION & ZONE DRAGGING)
-    // =========================================================================
-    function getCanvasCoords(evt) {
-      let rect = rCanvas.getBoundingClientRect();
-      return {
-        x: evt.clientX - rect.left,
-        y: evt.clientY - rect.top
-      };
-    }
+function changeTheme(v) {
+  document.body.className = '';
+  if (v === 'military') document.body.classList.add('theme-military');
+  if (v === 'void') document.body.classList.add('theme-void');
+}
 
-    function screenToWorld(px, py) {
-      let w = rCanvas.width;
-      let h = rCanvas.height;
-      let ox = w / 2;
-      let oy = h - 35;
-      let maxPixR = Math.min(w * 0.44, h - 55);
-      let maxR = telemetry.range || 6.0;
+function addLog(msg, type) {
+  var t = new Date().toTimeString().split(' ')[0];
+  eventLogs.push({ time: t, msg: msg });
+  var div = document.getElementById('eventLog');
+  var el = document.createElement('div');
+  el.className = 'log-item';
+  el.innerHTML = '<span class="log-time">[' + t + ']</span> <span class="' + (type === 'alert' ? 'log-alert' : (type === 'ok' ? 'log-ok' : 'log-info')) + '">' + msg + '</span>';
+  div.appendChild(el);
+  div.scrollTop = div.scrollHeight;
+  if (div.children.length > 90) div.removeChild(div.firstChild);
+}
 
-      let wx = ((px - ox) / maxPixR) * maxR;
-      let wy = ((oy - py) / maxPixR) * maxR;
-      return { x: wx, y: wy };
-    }
+function exportLog() {
+  var csv = 'Time,Event\n' + eventLogs.map(function(l) { return '"' + l.time + '","' + l.msg + '"'; }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'RadarLog_' + Date.now() + '.csv';
+  a.click();
+}
 
-    function onCanvasMouseMove(e) {
-      let pos = getCanvasCoords(e);
-      let wPos = screenToWorld(pos.x, pos.y);
-      let dist = Math.sqrt(wPos.x * wPos.x + wPos.y * wPos.y);
+function toggleAudio() {
+  audioMuted = !audioMuted;
+  document.getElementById('audioBtn').innerText = audioMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+}
 
-      document.getElementById('cursorInfo').innerText = 
-        `X: ${wPos.x > 0 ? '+' : ''}${wPos.x.toFixed(2)}m | Y: ${wPos.y.toFixed(2)}m | R: ${dist.toFixed(2)}m`;
+function playAlertSiren() {
+  if (audioMuted) return;
+  var now = Date.now();
+  if (now - lastAlertSound < 450) return;
+  lastAlertSound = now;
 
-      if (isDrawingZone && drawStart) {
-        drawCurrent = pos;
-      }
-    }
-
-    function onCanvasMouseDown(e) {
-      if (isDrawingZone) {
-        drawStart = getCanvasCoords(e);
-        drawCurrent = drawStart;
-      }
-    }
-
-    function onCanvasMouseUp(e) {
-      if (isDrawingZone && drawStart && drawCurrent) {
-        let p1 = screenToWorld(drawStart.x, drawStart.y);
-        let p2 = screenToWorld(drawCurrent.x, drawCurrent.y);
-
-        let newZone = {
-          id: zones.length + 1,
-          name: "Custom Zone #" + (zones.length + 1),
-          enabled: true,
-          color: "#ff1744",
-          xMin: Math.min(p1.x, p2.x),
-          xMax: Math.max(p1.x, p2.x),
-          yMin: Math.min(p1.y, p2.y),
-          yMax: Math.max(p1.y, p2.y)
-        };
-
-        zones.push(newZone);
-        renderZonesList();
-        syncCurrentZone();
-
-        // Update inputs
-        document.getElementById('zoneXMin').value = newZone.xMin.toFixed(2);
-        document.getElementById('zoneXMax').value = newZone.xMax.toFixed(2);
-        document.getElementById('zoneYMin').value = newZone.yMin.toFixed(2);
-        document.getElementById('zoneYMax').value = newZone.yMax.toFixed(2);
-
-        toggleDrawZoneMode(); // Exit draw mode
-        drawStart = null;
-        drawCurrent = null;
-      }
-    }
-
-    function onCanvasMouseLeave() {
-      drawStart = null;
-      drawCurrent = null;
-    }
-  </script>
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.22);
+    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.22);
+  } catch (e) {}
+}
+</script>
 </body>
 </html>

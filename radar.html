@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LD2452 Radar // Spatial Human Tracker</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #020c06;
+      overflow: hidden;
+      font-family: Consolas, monospace;
+      color: #3dff7a;
+    }
+    canvas {
+      display: block;
+    }
+    #hud {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      text-shadow: 0 0 8px #3dff7a;
+    }
+    #hud b {
+      font-size: 16px;
+      letter-spacing: 3px;
+    }
+    button {
+      background: #04200e;
+      color: #3dff7a;
+      border: 1px solid #3dff7a;
+      padding: 6px 12px;
+      margin: 6px 6px 0 0;
+      font: inherit;
+      cursor: pointer;
+      box-shadow: 0 0 8px #3dff7a55;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0a3a1c;
+    }
+    #list {
+      position: fixed;
+      top: 12px;
+      right: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: right;
+      text-shadow: 0 0 8px currentColor;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="hud">
+    <b>LD2452 // RADAR</b><br>
+    STATUS: <span id="st">OFFLINE</span><br>
+    CONTACTS: <span id="n">0</span><br>
+    <span id="dbg">WAITING FOR ESP32 DATA...</span><br>
+    <button id="bc">CONNECT RADAR</button>
+    <button id="bd">DEMO</button>
+  </div>
+  <div id="list"></div>
+
+  <script>
+    const cv = document.getElementById('c'), g = cv.getContext('2d');
+    const col = ['#3dff7a', '#ffc23d', '#3dd9ff'], RNG = 6000, FOV = 60, D = Math.PI / 180;
+    let W, H, cx, cy, s, T = [null, null, null], trail = [[], [], []], sw = -FOV, dir = 1;
+
+    function rs() {
+      W = cv.width = innerWidth;
+      H = cv.height = innerHeight;
+      cx = W / 2;
+      cy = H - 34;
+      s = Math.min((H - 90) / RNG, W * 0.46 / (RNG * Math.sin(FOV * D)));
+    }
+    window.onresize = rs;
+    rs();
+
+    const A = t => -Math.PI / 2 + t * D;
+    const P = (x, y) => [cx + x * s, cy - y * s];
+
+    function setT(i, on, x, y, v) {
+      if (on) {
+        T[i] = { x, y, v };
+        trail[i].push([x, y]);
+        if (trail[i].length > 70) trail[i].shift();
+      } else {
+        T[i] = null;
+      }
+    }
+
+    function draw(now) {
+      g.fillStyle = '#020c06';
+      g.fillRect(0, 0, W, H);
+      const R = RNG * s;
+
+      // Sector background glow
+      g.beginPath();
+      g.moveTo(cx, cy);
+      g.arc(cx, cy, R, A(-FOV), A(FOV));
+      g.closePath();
+      let bg = g.createRadialGradient(cx, cy, 0, cx, cy, R);
+      bg.addColorStop(0, '#0a3a1c');
+      bg.addColorStop(1, '#04180b');
+      g.fillStyle = bg;
+      g.fill();
+      g.strokeStyle = '#3dff7a';
+      g.lineWidth = 1.5;
+      g.shadowColor = '#3dff7a';
+      g.shadowBlur = 10;
+      g.stroke();
+      g.shadowBlur = 0;
+
+      // Concentric range rings
+      g.lineWidth = 1;
+      g.strokeStyle = '#3dff7a33';
+      g.fillStyle = '#3dff7a99';
+      g.font = '11px Consolas';
+      for (let r = 1; r <= 6; r++) {
+        g.beginPath();
+        g.arc(cx, cy, r * 1000 * s, A(-FOV), A(FOV));
+        g.stroke();
+        g.fillText(r + ' m', cx + 4, cy - r * 1000 * s - 3);
+      }
+
+      // Azimuth radial lines
+      for (let a = -FOV; a <= FOV; a += 15) {
+        g.beginPath();
+        g.moveTo(cx, cy);
+        g.lineTo(cx + R * Math.cos(A(a)), cy + R * Math.sin(A(a)));
+        g.stroke();
+        g.fillText(a + '°', cx + (R + 8) * Math.cos(A(a)) - 8, cy + (R + 8) * Math.sin(A(a)));
+      }
+
+      // Sweep radar line
+      sw += dir * 0.9;
+      if (sw > FOV || sw < -FOV) dir *= -1;
+      for (let k = 0; k < 40; k++) {
+        const a = sw - dir * k * 0.7;
+        if (Math.abs(a) > FOV) continue;
+        g.beginPath();
+        g.moveTo(cx, cy);
+        g.arc(cx, cy, R, A(a - 0.4), A(a + 0.4));
+        g.closePath();
+        g.fillStyle = `rgba(61,255,122,${0.22 * (1 - k / 40)})`;
+        g.fill();
+      }
+      g.strokeStyle = '#9dffb8';
+      g.lineWidth = 2;
+      g.shadowColor = '#3dff7a';
+      g.shadowBlur = 14;
+      g.beginPath();
+      g.moveTo(cx, cy);
+      g.lineTo(cx + R * Math.cos(A(sw)), cy + R * Math.sin(A(sw)));
+      g.stroke();
+      g.shadowBlur = 0;
+
+      // Radar sensor origin node
+      g.fillStyle = '#3dff7a';
+      g.beginPath();
+      g.arc(cx, cy, 5, 0, 7);
+      g.fill();
+
+      // Render tracked targets
+      let html = '', cnt = 0;
+      T.forEach((t, i) => {
+        const tr = trail[i];
+        if (!t && tr.length) tr.shift();
+        g.lineWidth = 2;
+        for (let k = 1; k < tr.length; k++) {
+          const [a, b] = P(...tr[k - 1]), [c, d] = P(...tr[k]);
+          g.strokeStyle = col[i] + Math.round(255 * k / tr.length * 0.7).toString(16).padStart(2, '0');
+          g.beginPath();
+          g.moveTo(a, b);
+          g.lineTo(c, d);
+          g.stroke();
+        }
+        if (!t) return;
+        cnt++;
+        const [px, py] = P(t.x, t.y);
+        const dist = Math.hypot(t.x, t.y) / 1000;
+        const ang = Math.atan2(t.x, t.y) / D;
+        const pulse = (now / 900 + i / 3) % 1;
+
+        // Target pulse ring
+        g.strokeStyle = col[i] + Math.round(255 * (1 - pulse)).toString(16).padStart(2, '0');
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(px, py, 8 + pulse * 26, 0, 7);
+        g.stroke();
+
+        // Target core dot
+        g.shadowColor = col[i];
+        g.shadowBlur = 22;
+        g.fillStyle = col[i];
+        g.beginPath();
+        g.arc(px, py, 7, 0, 7);
+        g.fill();
+        g.shadowBlur = 0;
+
+        // Target box & text
+        g.strokeStyle = col[i];
+        g.lineWidth = 1.5;
+        g.strokeRect(px - 14, py - 14, 28, 28);
+        g.fillStyle = col[i];
+        g.font = '12px Consolas';
+        g.fillText(`T${i + 1}  ${dist.toFixed(2)}m  ${ang.toFixed(0)}°`, px + 20, py - 6);
+        g.fillText(`${t.v > 0 ? '+' : ''}${t.v} cm/s`, px + 20, py + 9);
+
+        html += `<div style="color:${col[i]}">T${i + 1} ▸ ${dist.toFixed(2)} m @ ${ang.toFixed(0)}° | ${t.v} cm/s</div>`;
+      });
+
+      document.getElementById('list').innerHTML = html;
+      document.getElementById('n').textContent = cnt;
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+
+    // ---- DEMO MODE ----
+    let demo = null;
+    document.getElementById('bd').onclick = () => {
+      if (demo) {
+        clearInterval(demo);
+        demo = null;
+        T = [null, null, null];
+        document.getElementById('st').textContent = 'OFFLINE';
+        return;
+      }
+      let t = 0;
+      document.getElementById('st').textContent = 'DEMO';
+      demo = setInterval(() => {
+        t += 0.1;
+        setT(0, 1, 1800 * Math.sin(t * 0.5), 3000 + 1200 * Math.sin(t * 0.3), -12);
+        setT(1, 1, -1500 * Math.cos(t * 0.4), 2400 + 1000 * Math.cos(t * 0.6), 20);
+        setT(2, Math.sin(t * 0.2) > -0.3, 2500 * Math.sin(t * 0.35 + 2), 4300 - 900 * Math.sin(t * 0.5), 5);
+      }, 100);
+    };
+
+    // ---- LIVE WEB SERIAL CONNECTION ----
+    document.getElementById('bc').onclick = async () => {
+      if (!('serial' in navigator)) {
+        alert('Please open this file in Google Chrome or Microsoft Edge (Web Serial API support required).');
+        return;
+      }
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        if (demo) {
+          clearInterval(demo);
+          demo = null;
+        }
+        document.getElementById('st').textContent = 'ONLINE';
+        document.getElementById('bc').textContent = 'CONNECTED';
+        document.getElementById('bc').style.borderColor = '#00e5ff';
+        document.getElementById('bc').style.color = '#00e5ff';
+
+        const rd = port.readable.pipeThrough(new TextDecoderStream()).getReader();
+        let buf = '';
+        for (;;) {
+          const { value, done } = await rd.read();
+          if (done) break;
+          buf += value;
+          let l;
+          while ((l = buf.indexOf('\n')) >= 0) {
+            const line = buf.slice(0, l).trim();
+            buf = buf.slice(l + 1);
+            const dbg = document.getElementById('dbg');
+            if (line[0] === 'S') {
+              const q = line.split(',');
+              dbg.textContent = 'RADAR BYTES: ' + q[1] + ' | VALID FRAMES: ' + q[2];
+              continue;
+            }
+            if (line[0] !== 'R') {
+              if (line.length > 0 && !line.startsWith('#')) {
+                dbg.textContent = 'STATUS: ' + line.slice(0, 60);
+              }
+              continue;
+            }
+            const p = line.split(',').map(Number);
+            for (let i = 0; i < 3; i++) {
+              const o = 1 + i * 4;
+              setT(i, p[o] === 1, p[o + 1], p[o + 2], p[o + 3]);
+            }
+          }
+        }
+      } catch (e) {
+        document.getElementById('st').textContent = 'ERROR: ' + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
