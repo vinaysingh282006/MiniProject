@@ -9,19 +9,24 @@ static const char INDEX_HTML_PROGMEM[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Radar Fusion OS // Dual 24G + 60G mmWave</title>
   <style>
-    :root { --bg: #090d16; --card: rgba(18,25,43,0.9); --cyan: #00e5ff; --mag: #e040fb; --amber: #ffb300; --red: #ff1744; --green: #00e676; }
+    :root { --bg: #070a12; --card: rgba(14,21,37,0.9); --cyan: #00e5ff; --mag: #e040fb; --amber: #ffb300; --red: #ff1744; --green: #00e676; --text: #f1f5f9; --dim: #94a3b8; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
-    header { background: #0c111d; border-bottom: 1px solid #1e2c47; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .title { font-size: 1.1rem; font-weight: 700; background: linear-gradient(90deg, #00e5ff, #e040fb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .btn { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
-    .btn-active { background: rgba(0, 229, 255, 0.25) !important; border-color: var(--cyan) !important; }
-    #alertBanner { display: none; background: var(--red); color: #fff; text-align: center; padding: 6px; font-weight: bold; letter-spacing: 1px; }
-    .main { display: grid; grid-template-columns: 1fr 380px; gap: 14px; padding: 14px; flex: 1; }
-    .card { background: var(--card); border: 1px solid #1e2c47; border-radius: 8px; padding: 12px; }
-    .canvas-box { position: relative; flex: 1; min-height: 440px; background: radial-gradient(circle at 50% 90%, #0d1527 0%, #080c14 80%); border-radius: 8px; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', -apple-system, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+    body.alert-pulse { box-shadow: inset 0 0 45px rgba(255, 23, 68, 0.7); animation: aPulse 0.7s infinite alternate; }
+    @keyframes aPulse { 0% { box-shadow: inset 0 0 20px rgba(255, 23, 68, 0.4); } 100% { box-shadow: inset 0 0 65px rgba(255, 23, 68, 0.85); } }
+    header { background: #0a0f1a; border-bottom: 1px solid #1a2742; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; background: linear-gradient(90deg, var(--cyan), var(--mag)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .btn { background: #141e33; border: 1px solid #1a2742; color: #fff; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { background: #1e2c4a; }
+    .btn-active { background: rgba(0, 229, 255, 0.2) !important; border-color: var(--cyan) !important; color: #fff !important; }
+    #alertBanner { display: none; background: #ff1744; color: #fff; text-align: center; padding: 8px; font-weight: bold; letter-spacing: 2px; }
+    .main { display: grid; grid-template-columns: 1fr 400px; gap: 14px; padding: 14px; flex: 1; }
+    .card { background: var(--card); border: 1px solid #1a2742; border-radius: 8px; padding: 12px; }
+    .canvas-box { position: relative; flex: 1; min-height: 480px; background: radial-gradient(circle at 50% 92%, #0b152b 0%, #060a14 75%); border-radius: 8px; border: 1px solid #16243d; cursor: crosshair; }
     canvas { position: absolute; top:0; left:0; width:100%; height:100%; }
-    .terminal { background: #080c14; padding: 6px; font-family: monospace; font-size: 0.72rem; color: #38bdf8; border-radius: 4px; overflow-y: auto; max-height: 60px; }
+    .terminal { background: #050810; border: 1px solid #121d30; padding: 6px; font-family: monospace; font-size: 0.72rem; color: #38bdf8; border-radius: 4px; overflow-y: auto; max-height: 60px; }
+    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.82rem; }
+    .input-val { background: #0b1120; border: 1px solid #1a2742; color: #fff; padding: 4px 6px; border-radius: 4px; width: 65px; font-family: monospace; }
     @media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -29,40 +34,54 @@ static const char INDEX_HTML_PROGMEM[] PROGMEM = R"rawliteral(
   <div id="alertBanner">🚨 PERIMETER BREACH: INTRUDER IN ALERT ZONE 🚨</div>
   <header>
     <div>
-      <div class="title">RADAR FUSION LABS</div>
-      <div style="font-size:0.75rem; color:#64748b;">HLK-LD2452 (24G) & HLK-LD6003D (60G) Spatial Tracker</div>
+      <div class="brand-title">RADAR FUSION LABS</div>
+      <div style="font-size:0.72rem; color:var(--dim);">Dual 24GHz (LD2452) + 60GHz (LD6003D) mmWave Console</div>
     </div>
     <div style="display:flex; gap:6px;">
       <button class="btn" id="b0" onclick="sendCmd({cmd:'set_mode',val:0})">24G (LD2452)</button>
       <button class="btn" id="b1" onclick="sendCmd({cmd:'set_mode',val:1})">60G (LD6003D)</button>
       <button class="btn btn-active" id="b2" onclick="sendCmd({cmd:'set_mode',val:2})">DUAL FUSION</button>
     </div>
-    <div id="status" style="font-family:monospace; font-size:0.8rem; color:var(--green);">● LIVE</div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="btn" id="sndBtn" onclick="toggleSnd()">🔊</button>
+      <div id="status" style="font-family:monospace; font-size:0.8rem; color:var(--green);">● LIVE</div>
+    </div>
   </header>
   <div class="main">
     <div class="card" style="display:flex; flex-direction:column;">
       <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem; color:var(--cyan); font-weight:bold;">
-        <span>SPATIAL RADAR HUD</span>
-        <span id="fps">-- FPS</span>
+        <span>SPATIAL PLANAR HUD PROJECTION</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn" id="btnDraw" onclick="toggleDraw()">+ Draw Zone</button>
+          <span id="fps" style="font-family:monospace; color:var(--dim); padding-top:4px;">-- FPS</span>
+        </div>
       </div>
-      <div class="canvas-box" id="cWrap"><canvas id="rCanvas"></canvas></div>
+      <div class="canvas-box" id="cWrap"
+           onmousedown="onMD(event)" onmousemove="onMM(event)" onmouseup="onMU(event)"><canvas id="rCanvas"></canvas></div>
     </div>
     <div style="display:flex; flex-direction:column; gap:12px;">
       <div class="card">
-        <div style="color:var(--cyan); font-weight:bold; font-size:0.85rem; margin-bottom:6px;">ACTIVE TARGETS</div>
-        <div id="tgtBox" style="display:flex; flex-direction:column; gap:6px; font-size:0.8rem;">Waiting for radar...</div>
+        <div style="color:var(--cyan); font-weight:bold; font-size:0.85rem; margin-bottom:6px;">ACTIVE TRACKED TARGETS</div>
+        <div id="tgtBox" style="display:flex; flex-direction:column; gap:6px; font-size:0.8rem; max-height:180px; overflow-y:auto;">Awaiting radar echoes...</div>
       </div>
       <div class="card">
-        <div style="color:var(--cyan); font-weight:bold; font-size:0.85rem; margin-bottom:6px;">CONTROLS & GEOFENCE</div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-          <span>Range:</span>
+        <div style="color:var(--cyan); font-weight:bold; font-size:0.85rem; margin-bottom:6px;">GEOFENCE ALERT ZONE</div>
+        <div class="row"><span>Active:</span><input type="checkbox" id="zEn" checked onchange="saveZone()"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <div class="row"><span>X Min:</span><input type="number" step="0.2" class="input-val" id="zx1" value="-1.5" onchange="saveZone()"></div>
+          <div class="row"><span>X Max:</span><input type="number" step="0.2" class="input-val" id="zx2" value="1.5" onchange="saveZone()"></div>
+          <div class="row"><span>Y Min:</span><input type="number" step="0.2" class="input-val" id="zy1" value="1.0" onchange="saveZone()"></div>
+          <div class="row"><span>Y Max:</span><input type="number" step="0.2" class="input-val" id="zy2" value="3.5" onchange="saveZone()"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="color:var(--cyan); font-weight:bold; font-size:0.85rem; margin-bottom:6px;">CONTROLS & RANGE</div>
+        <div class="row">
+          <span>Max Range:</span>
           <input type="range" min="2" max="8" step="1" id="rng" value="6" oninput="sendCmd({cmd:'set_range',val:parseFloat(this.value)})">
-          <span id="rngVal">6m</span>
+          <span id="rngVal" class="input-val" style="width:45px;">6m</span>
         </div>
-        <div style="display:flex; justify-content:space-between;">
-          <span>Alert Zone:</span>
-          <button class="btn" onclick="sendCmd({cmd:'toggle_zone'})">Toggle Zone</button>
-        </div>
+        <div class="row"><span>Cartesian Grid:</span><input type="checkbox" id="grdChk" checked></div>
       </div>
       <div class="card">
         <div style="color:var(--cyan); font-weight:bold; font-size:0.85rem; margin-bottom:4px;">RAW UART SNIFFER</div>
@@ -74,14 +93,31 @@ static const char INDEX_HTML_PROGMEM[] PROGMEM = R"rawliteral(
     </div>
   </div>
   <script>
-    let ws, data = {mode:2, range:6, targets:[], alert:false}, sweep = -60, canvas, ctx;
+    let ws, data = {mode:2, range:6, targets:[], alert:false, zone:{enabled:true,xMin:-1.5,xMax:1.5,yMin:1.0,yMax:3.5}};
+    let sweep = -60, sDir = 1, canvas, ctx, isDraw = false, pStart = null, pCur = null, audioCtx = null, mute = false, lastSnd = 0;
+
+    function playBeep() {
+      if (mute) return;
+      let now = Date.now();
+      if (now - lastSnd < 350) return;
+      lastSnd = now;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.2);
+        g.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+      } catch(e){}
+    }
+    function toggleSnd() { mute = !mute; document.getElementById('sndBtn').innerText = mute ? '🔇' : '🔊'; }
+
     window.onload = () => {
-      canvas = document.getElementById('rCanvas');
-      ctx = canvas.getContext('2d');
-      resize();
-      window.onresize = resize;
-      initWS();
-      requestAnimationFrame(draw);
+      canvas = document.getElementById('rCanvas'); ctx = canvas.getContext('2d');
+      resize(); window.onresize = resize; initWS(); requestAnimationFrame(render);
     };
     function resize() { let w = document.getElementById('cWrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; }
     function initWS() {
@@ -91,6 +127,8 @@ static const char INDEX_HTML_PROGMEM[] PROGMEM = R"rawliteral(
           data = JSON.parse(e.data);
           document.getElementById('fps').innerText = Math.round(data.fps||0) + " FPS";
           document.getElementById('alertBanner').style.display = data.alert ? 'block' : 'none';
+          document.body.className = data.alert ? 'alert-pulse' : '';
+          if (data.alert) playBeep();
           document.getElementById('rngVal').innerText = (data.range||6) + "m";
           document.getElementById('rng').value = data.range||6;
           ['b0','b1','b2'].forEach((id, i) => document.getElementById(id).className = (data.mode===i) ? "btn btn-active" : "btn");
@@ -103,11 +141,11 @@ static const char INDEX_HTML_PROGMEM[] PROGMEM = R"rawliteral(
     }
     function renderTgt(tg) {
       let b = document.getElementById('tgtBox');
-      if (!tg.length) { b.innerHTML = "No targets in field"; return; }
+      if (!tg.length) { b.innerHTML = "<div style='color:#64748b;'>No echoes detected</div>"; return; }
       let h = '';
       tg.forEach(t => {
         let col = t.src===3 ? "#e040fb" : (t.src===2 ? "#ffb300" : "#00e5ff");
-        h += `<div style="background:#0f172a; padding:6px; border-radius:4px; border:1px solid ${t.inZone?'#ff1744':'#1e2c47'}; font-family:monospace;">
+        h += `<div style="background:#0a1120; padding:6px; border-radius:4px; border:1px solid ${t.inZone?'#ff1744':'#1a2742'}; font-family:monospace;">
           <strong style="color:${col}">T${t.id} [${t.src===3?'DUAL':t.src===2?'60G':'24G'}]</strong> Dist:${t.dist.toFixed(2)}m Ang:${t.ang.toFixed(1)}° Spd:${t.spd.toFixed(2)}m/s
           <div style="color:#64748b;">X:${t.x.toFixed(2)}m Y:${t.y.toFixed(2)}m | ${t.inZone?'<span style=\"color:#ff1744\">BREACH</span>':t.conf+'%'}</div>
         </div>`;
@@ -115,36 +153,80 @@ static const char INDEX_HTML_PROGMEM[] PROGMEM = R"rawliteral(
       b.innerHTML = h;
     }
     function sendCmd(o) { if (ws && ws.readyState===1) ws.send(JSON.stringify(o)); }
-    function draw() {
-      let w = canvas.width, h = canvas.height;
-      ctx.clearRect(0,0,w,h);
-      let ox = w/2, oy = h - 25, maxPix = Math.min(w*0.45, h-40), maxR = data.range||6;
+    function saveZone() {
+      sendCmd({
+        cmd: "set_zone",
+        enabled: document.getElementById('zEn').checked,
+        xMin: parseFloat(document.getElementById('zx1').value),
+        xMax: parseFloat(document.getElementById('zx2').value),
+        yMin: parseFloat(document.getElementById('zy1').value),
+        yMax: parseFloat(document.getElementById('zy2').value)
+      });
+    }
+    function toggleDraw() {
+      isDraw = !isDraw;
+      let b = document.getElementById('btnDraw');
+      b.className = isDraw ? "btn btn-active" : "btn";
+      b.innerText = isDraw ? "Drag on Map..." : "+ Draw Zone";
+    }
+    function getPos(e) { let r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    function screenToWorld(px, py) {
+      let ox = canvas.width / 2, oy = canvas.height - 30, maxPix = Math.min(canvas.width * 0.44, canvas.height - 50), maxR = data.range || 6;
+      return { x: ((px - ox) / maxPix) * maxR, y: ((oy - py) / maxPix) * maxR };
+    }
+    function onMD(e) { if (isDraw) { pStart = getPos(e); pCur = pStart; } }
+    function onMM(e) { if (isDraw && pStart) pCur = getPos(e); }
+    function onMU(e) {
+      if (isDraw && pStart && pCur) {
+        let w1 = screenToWorld(pStart.x, pStart.y), w2 = screenToWorld(pCur.x, pCur.y);
+        document.getElementById('zx1').value = Math.min(w1.x, w2.x).toFixed(2);
+        document.getElementById('zx2').value = Math.max(w1.x, w2.x).toFixed(2);
+        document.getElementById('zy1').value = Math.min(w1.y, w2.y).toFixed(2);
+        document.getElementById('zy2').value = Math.max(w1.y, w2.y).toFixed(2);
+        saveZone(); toggleDraw(); pStart = null; pCur = null;
+      }
+    }
+    function render() {
+      let w = canvas.width, h = canvas.height; ctx.clearRect(0,0,w,h);
+      let ox = w/2, oy = h - 30, maxPix = Math.min(w*0.44, h-50), maxR = data.range||6;
+
       ctx.beginPath(); ctx.arc(ox, oy, maxPix, -Math.PI/2 - (Math.PI/3), -Math.PI/2 + (Math.PI/3));
-      ctx.strokeStyle = "#1e293b"; ctx.stroke();
+      ctx.strokeStyle = "#16233b"; ctx.lineWidth = 1.5; ctx.stroke();
+
       for (let r=2; r<=maxR; r+=2) {
         let pr = (r/maxR)*maxPix;
         ctx.beginPath(); ctx.arc(ox, oy, pr, -Math.PI/2 - (Math.PI/3), -Math.PI/2 + (Math.PI/3));
-        ctx.strokeStyle = "#16233b"; ctx.stroke();
-        ctx.fillStyle = "#64748b"; ctx.font = "10px monospace"; ctx.fillText(r+"m", ox+15, oy-pr);
+        ctx.strokeStyle = "#132036"; ctx.stroke();
+        ctx.fillStyle = "#64748b"; ctx.font = "bold 11px monospace"; ctx.fillText(r+"m", ox+15, oy-pr);
       }
-      sweep += 2; if (sweep > 60) sweep = -60;
+      sweep += 1.8 * sDir;
+      if (sweep > 60) { sweep = 60; sDir = -1; }
+      else if (sweep < -60) { sweep = -60; sDir = 1; }
       let sRad = sweep * (Math.PI/180);
       ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox+Math.sin(sRad)*maxPix, oy-Math.cos(sRad)*maxPix);
-      ctx.strokeStyle = "rgba(0,229,255,0.4)"; ctx.stroke();
+      ctx.strokeStyle = "rgba(0,229,255,0.75)"; ctx.lineWidth = 2; ctx.stroke();
+
       let z = data.zone;
       if (z && z.enabled) {
         let x1 = ox + (z.xMin / maxR)*maxPix, y1 = oy - (z.yMax / maxR)*maxPix;
         let x2 = ox + (z.xMax / maxR)*maxPix, y2 = oy - (z.yMin / maxR)*maxPix;
+        ctx.fillStyle = data.alert ? "rgba(255,23,68,0.15)" : "rgba(0,230,118,0.08)";
+        ctx.fillRect(x1, y1, x2-x1, y2-y1);
         ctx.strokeStyle = data.alert ? "#ff1744" : "#00e676";
-        ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+        ctx.setLineDash([6, 4]); ctx.strokeRect(x1, y1, x2-x1, y2-y1); ctx.setLineDash([]);
+      }
+      if (isDraw && pStart && pCur) {
+        ctx.strokeStyle = "#00e5ff"; ctx.lineWidth = 2;
+        ctx.strokeRect(Math.min(pStart.x, pCur.x), Math.min(pStart.y, pCur.y), Math.abs(pStart.x - pCur.x), Math.abs(pStart.y - pCur.y));
       }
       (data.targets||[]).forEach(t => {
         let tx = ox + (t.x / maxR)*maxPix, ty = oy - (t.y / maxR)*maxPix;
-        ctx.fillStyle = t.inZone ? "#ff1744" : (t.src===3 ? "#e040fb" : (t.src===2 ? "#ffb300" : "#00e5ff"));
-        ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.font = "10px monospace"; ctx.fillText(`T${t.id}:${t.dist.toFixed(1)}m`, tx+8, ty);
+        let col = t.inZone ? "#ff1744" : (t.src===3 ? "#e040fb" : (t.src===2 ? "#ffb300" : "#00e5ff"));
+        ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI*2); ctx.fillStyle = col; ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#fff"; ctx.font = "bold 11px monospace"; ctx.fillText(`T${t.id}:${t.dist.toFixed(1)}m`, tx+9, ty);
       });
-      requestAnimationFrame(draw);
+      requestAnimationFrame(render);
     }
   </script>
 </body>
