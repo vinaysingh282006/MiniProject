@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar Fusion OS // Dual 24GHz + 60GHz Spatial Intelligence</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 25, 43, 0.85);
+      --border: #1e2c47;
+      --cyan: #00e5ff;
+      --magenta: #e040fb;
+      --amber: #ffb300;
+      --alert: #ff1744;
+      --green: #00e676;
+      --text: #e2e8f0;
+      --muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header Bar */
+    header {
+      background: rgba(12, 17, 29, 0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+    .brand-icon::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--magenta);
+      border-radius: 50%;
+    }
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(90deg, #00e5ff, #e040fb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    /* Connection Bar */
+    .conn-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .conn-input {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      width: 170px;
+    }
+    .btn {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { background: #334155; }
+    .btn-cyan { border-color: var(--cyan); color: var(--cyan); }
+    .btn-cyan:hover { background: rgba(0, 229, 255, 0.15); box-shadow: 0 0 10px rgba(0, 229, 255, 0.3); }
+    .btn-magenta { border-color: var(--magenta); color: var(--magenta); }
+    .btn-magenta:hover { background: rgba(224, 64, 251, 0.15); box-shadow: 0 0 10px rgba(224, 64, 251, 0.3); }
+    .btn-active { background: rgba(0, 229, 255, 0.2) !important; border-color: var(--cyan) !important; color: #fff !important; }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      padding: 5px 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .status-dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.alert { background: var(--alert); box-shadow: 0 0 8px var(--alert); }
+
+    /* Alert Banner */
+    #alertBanner {
+      display: none;
+      background: linear-gradient(90deg, #ff1744, #d50000);
+      color: #fff;
+      text-align: center;
+      padding: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: alertPulse 1s infinite alternate;
+    }
+    @keyframes alertPulse {
+      0% { opacity: 0.85; }
+      100% { opacity: 1; box-shadow: 0 0 20px rgba(255, 23, 68, 0.8); }
+    }
+
+    /* Main Grid Layout */
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 440px;
+      gap: 16px;
+      padding: 16px;
+      flex: 1;
+    }
+
+    /* Radar Viewport Card */
+    .radar-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .radar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .canvas-wrapper {
+      position: relative;
+      flex: 1;
+      min-height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 90%, #0d1527 0%, #080c14 80%);
+      border-radius: 10px;
+      border: 1px solid #142036;
+      overflow: hidden;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Sidebar Panels */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .card-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+    }
+
+    /* Target Cards & Table */
+    .targets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .target-item {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .target-item:hover { border-color: var(--cyan); }
+    .target-item.in-alert { border-color: var(--alert); background: rgba(255, 23, 68, 0.1); }
+    .tgt-badge {
+      font-family: monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .tgt-24g { background: rgba(0, 229, 255, 0.15); color: var(--cyan); border: 1px solid var(--cyan); }
+    .tgt-60g { background: rgba(255, 179, 0, 0.15); color: var(--amber); border: 1px solid var(--amber); }
+    .tgt-dual { background: rgba(224, 64, 251, 0.15); color: var(--magenta); border: 1px solid var(--magenta); }
+
+    .tgt-stats {
+      font-family: monospace;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    /* Controls form */
+    .form-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+    .form-input {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 4px;
+      width: 70px;
+      text-align: right;
+      font-family: monospace;
+    }
+    input[type="range"] {
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    /* Raw Hex Terminal */
+    .terminal {
+      background: #080c14;
+      border: 1px solid #142036;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.75rem;
+      color: #38bdf8;
+      max-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Chart Canvas */
+    #chartCanvas {
+      width: 100%;
+      height: 100px;
+      background: #080c14;
+      border-radius: 6px;
+      border: 1px solid #142036;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .main-container { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Alert Warning Ribbon -->
+  <div id="alertBanner">🚨 PERIMETER BREACH DETECTED: INTRUDER IN ALERT ZONE 🚨</div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon"></div>
+      <div>
+        <div class="brand-title">RADAR FUSION LABS</div>
+        <div class="brand-sub">24GHz LD2452 + 60GHz LD6003D mmWave System</div>
+      </div>
+    </div>
+
+    <!-- Mode Selector In Header -->
+    <div class="mode-tabs">
+      <button class="btn btn-cyan" id="modeBtn24" onclick="setMode(0)">24GHz (LD2452)</button>
+      <button class="btn" id="modeBtn60" onclick="setMode(1)">60GHz (LD6003D)</button>
+      <button class="btn btn-magenta" id="modeBtnDual" onclick="setMode(2)">DUAL FUSION</button>
+    </div>
+
+    <!-- Connection Box -->
+    <div class="conn-bar">
+      <div class="status-badge">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Disconnected</span>
+      </div>
+      <input type="text" id="espIpInput" class="conn-input" value="" placeholder="ESP32 IP or Host">
+      <button class="btn btn-cyan" id="connectBtn" onclick="toggleConnect()">Connect</button>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <div class="main-container">
+
+    <!-- Left: Radar Viewport -->
+    <div class="radar-card">
+      <div class="radar-header">
+        <div style="font-size: 0.9rem; font-weight: 700; color: var(--cyan); letter-spacing: 1px;">
+          SPATIAL RADAR HUD (TOP-DOWN PLANAR PROJECTION)
+        </div>
+        <div style="display:flex; gap: 8px; font-size: 0.8rem; font-family: monospace;">
+          <span style="color: var(--cyan);">● 24G LD2452</span>
+          <span style="color: var(--amber);">● 60G LD6003D</span>
+          <span style="color: var(--magenta);">● DUAL LOCKED</span>
+          <span style="color: var(--alert);">■ ALERT ZONE</span>
+        </div>
+      </div>
+
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <canvas id="radarCanvas"></canvas>
+      </div>
+
+      <!-- Live Distance Time-series Chart -->
+      <div style="margin-top: 12px;">
+        <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between;">
+          <span>REAL-TIME TARGET DISTANCE (m) OVER TIME</span>
+          <span id="fpsBadge" style="font-family: monospace; color: var(--cyan);">-- FPS</span>
+        </div>
+        <canvas id="chartCanvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="sidebar">
+
+      <!-- 1. Tracked Targets Live List -->
+      <div class="card">
+        <div class="card-title">
+          <span>Tracked Targets</span>
+          <span id="targetCountBadge" style="color: var(--cyan); font-family: monospace;">0 Active</span>
+        </div>
+        <div class="targets-list" id="targetsList">
+          <div style="color: var(--muted); font-size: 0.8rem; text-align: center; padding: 20px;">
+            Awaiting Radar Detections...
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Individual Target Lock -->
+      <div class="card">
+        <div class="card-title">Individual Tracking Lock</div>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-active" style="flex:1;" id="btnTrackAll" onclick="setTrack(-1)">All Targets</button>
+          <button class="btn" style="flex:1;" id="btnTrack1" onclick="setTrack(1)">Target 1</button>
+          <button class="btn" style="flex:1;" id="btnTrack2" onclick="setTrack(2)">Target 2</button>
+          <button class="btn" style="flex:1;" id="btnTrack3" onclick="setTrack(3)">Target 3</button>
+        </div>
+      </div>
+
+      <!-- 3. Geofence Alert Zone Controls -->
+      <div class="card">
+        <div class="card-title">
+          <span>Geofence Alert Zone</span>
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.75rem;">
+            <input type="checkbox" id="zoneEnabled" checked onchange="updateZone()"> Active
+          </label>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="form-group">
+            <label>X Min (m):</label>
+            <input type="number" step="0.2" class="form-input" id="zoneXMin" value="-1.5" onchange="updateZone()">
+          </div>
+          <div class="form-group">
+            <label>X Max (m):</label>
+            <input type="number" step="0.2" class="form-input" id="zoneXMax" value="1.5" onchange="updateZone()">
+          </div>
+          <div class="form-group">
+            <label>Y Min (m):</label>
+            <input type="number" step="0.2" class="form-input" id="zoneYMin" value="1.0" onchange="updateZone()">
+          </div>
+          <div class="form-group">
+            <label>Y Max (m):</label>
+            <input type="number" step="0.2" class="form-input" id="zoneYMax" value="3.5" onchange="updateZone()">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top: 6px;">
+          <label>Web Audio Siren on Breach:</label>
+          <input type="checkbox" id="audioSirenToggle" checked>
+        </div>
+      </div>
+
+      <!-- 4. Radar Display Controls -->
+      <div class="card">
+        <div class="card-title">HUD & Calibration</div>
+        <div class="form-group">
+          <label>Max Zoom Range (m):</label>
+          <input type="range" id="rangeSlider" min="2" max="8" step="1" value="6" oninput="setRange(this.value)">
+          <span id="rangeVal" style="font-family: monospace; width: 30px; text-align: right;">6m</span>
+        </div>
+        <div class="form-group">
+          <label>Cartesian Grid:</label>
+          <input type="checkbox" id="gridToggle" checked onchange="toggleGrid()">
+        </div>
+        <div class="form-group">
+          <label>Trajectory Trails:</label>
+          <input type="checkbox" id="trailsToggle" checked>
+        </div>
+      </div>
+
+      <!-- 5. Sensor Raw Data Sniffer -->
+      <div class="card">
+        <div class="card-title">Raw Telemetry Sniffer</div>
+        <div style="font-size: 0.72rem; color: var(--cyan); margin-bottom: 2px;">HLK-LD2452 (24GHz @ 256k):</div>
+        <div class="terminal" id="raw24Terminal">Waiting for UART packets...</div>
+        <div style="font-size: 0.72rem; color: var(--amber); margin-top: 6px; margin-bottom: 2px;">HLK-LD6003D (60GHz @ 115k):</div>
+        <div class="terminal" id="raw60Terminal">Waiting for UART packets...</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // System State
+    let socket = null;
+    let isConnected = false;
+    let sweepAngle = -60;
+    let currentData = {
+      mode: 2,
+      range: 6.0,
+      grid: true,
+      fps: 0,
+      alert: false,
+      targets: [],
+      zone: { enabled: true, xMin: -1.5, xMax: 1.5, yMin: 1.0, yMax: 3.5 },
+      raw24: "",
+      raw60: ""
+    };
+
+    // Distance History Buffer for Strip Chart
+    const historyLen = 100;
+    let distHistory = Array(historyLen).fill(0);
+
+    // Audio Alert Synthesizer
+    let audioCtx = null;
+    let lastAudioBeep = 0;
+
+    function playBeep() {
+      if (!document.getElementById('audioSirenToggle').checked) return;
+      let now = Date.now();
+      if (now - lastAudioBeep < 400) return;
+      lastAudioBeep = now;
+
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+      } catch (e) { console.error(e); }
+    }
+
+    // Auto-detect Host IP or default
+    window.onload = () => {
+      let host = window.location.host;
+      if (host && host.length > 2) {
+        document.getElementById('espIpInput').value = host;
+      } else {
+        document.getElementById('espIpInput').value = '192.168.4.1';
+      }
+      initCanvases();
+      requestAnimationFrame(renderLoop);
+    };
+
+    function toggleConnect() {
+      if (isConnected) {
+        if (socket) socket.close();
+      } else {
+        let ip = document.getElementById('espIpInput').value.trim();
+        let url = ip.startsWith('ws://') ? ip : ('ws://' + ip + '/ws');
+        connectWebSocket(url);
+      }
+    }
+
+    function connectWebSocket(url) {
+      document.getElementById('statusText').innerText = "Connecting...";
+      document.getElementById('connectBtn').innerText = "Cancel";
+
+      try {
+        socket = new WebSocket(url);
+        socket.onopen = () => {
+          isConnected = true;
+          document.getElementById('statusDot').className = "status-dot connected";
+          document.getElementById('statusText').innerText = "Live";
+          document.getElementById('connectBtn').innerText = "Disconnect";
+        };
+        socket.onclose = () => {
+          isConnected = false;
+          document.getElementById('statusDot').className = "status-dot";
+          document.getElementById('statusText').innerText = "Disconnected";
+          document.getElementById('connectBtn').innerText = "Connect";
+        };
+        socket.onerror = (err) => {
+          console.error("WS Error:", err);
+        };
+        socket.onmessage = (event) => {
+          try {
+            let msg = JSON.parse(event.data);
+            handleTelemetry(msg);
+          } catch(e) { console.error("Parse JSON err:", e); }
+        };
+      } catch (err) {
+        console.error("Socket error", err);
+      }
+    }
+
+    function handleTelemetry(data) {
+      currentData = data;
+
+      // Update UI Header / FPS
+      document.getElementById('fpsBadge').innerText = (data.fps || 0).toFixed(0) + " FPS";
+      document.getElementById('rangeVal').innerText = (data.range || 6) + "m";
+      document.getElementById('rangeSlider').value = data.range || 6;
+
+      // Mode Buttons Highlight
+      document.getElementById('modeBtn24').className = (data.mode === 0) ? "btn btn-cyan btn-active" : "btn btn-cyan";
+      document.getElementById('modeBtn60').className = (data.mode === 1) ? "btn btn-active" : "btn";
+      document.getElementById('modeBtnDual').className = (data.mode === 2) ? "btn btn-magenta btn-active" : "btn btn-magenta";
+
+      // Alert Banner & Audio
+      let alertBanner = document.getElementById('alertBanner');
+      if (data.alert) {
+        alertBanner.style.display = 'block';
+        document.getElementById('statusDot').className = "status-dot alert";
+        playBeep();
+      } else {
+        alertBanner.style.display = 'none';
+        if (isConnected) document.getElementById('statusDot').className = "status-dot connected";
+      }
+
+      // Target Table Update
+      updateTargetsList(data.targets || []);
+
+      // Raw Terminals
+      if (data.raw24) document.getElementById('raw24Terminal').innerText = data.raw24;
+      if (data.raw60) document.getElementById('raw60Terminal').innerText = data.raw60;
+
+      // Update Chart with primary target distance
+      let d = (data.targets && data.targets.length > 0) ? data.targets[0].dist : 0;
+      distHistory.shift();
+      distHistory.push(d);
+    }
+
+    function updateTargetsList(targets) {
+      let list = document.getElementById('targetsList');
+      document.getElementById('targetCountBadge').innerText = targets.length + " Active";
+
+      if (targets.length === 0) {
+        list.innerHTML = `<div style="color: var(--muted); font-size: 0.8rem; text-align: center; padding: 20px;">No Targets in Radar Field</div>`;
+        return;
+      }
+
+      let html = '';
+      targets.forEach(t => {
+        let badgeClass = (t.src === 3) ? "tgt-badge tgt-dual" : (t.src === 2) ? "tgt-badge tgt-60g" : "tgt-badge tgt-24g";
+        let srcLabel = (t.src === 3) ? "DUAL" : (t.src === 2) ? "60G" : "24G";
+        let alertClass = t.inZone ? "target-item in-alert" : "target-item";
+
+        html += `
+          <div class="${alertClass}">
+            <div class="${badgeClass}">T${t.id} [${srcLabel}]</div>
+            <div class="tgt-stats">
+              <div><strong>Dist:</strong> ${t.dist.toFixed(2)}m | <strong>Ang:</strong> ${t.ang > 0 ? '+' : ''}${t.ang.toFixed(1)}°</div>
+              <div style="color: var(--muted);">X: ${t.x > 0 ? '+' : ''}${t.x.toFixed(2)}m | Y: ${t.y.toFixed(2)}m | Spd: ${t.spd > 0 ? '+' : ''}${t.spd.toFixed(2)}m/s</div>
+            </div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: ${t.inZone ? 'var(--alert)' : 'var(--green)'};">
+              ${t.inZone ? 'BREACH' : t.conf + '%'}
+            </div>
+          </div>
+        `;
+      });
+      list.innerHTML = html;
+    }
+
+    // Commands to ESP32
+    function sendCommand(obj) {
+      if (socket && isConnected) {
+        socket.send(JSON.stringify(obj));
+      }
+    }
+
+    function setMode(m) { sendCommand({ cmd: "set_mode", val: m }); }
+    function setRange(r) { sendCommand({ cmd: "set_range", val: parseFloat(r) }); }
+    function setTrack(t) {
+      sendCommand({ cmd: "set_track", val: t });
+      ['btnTrackAll', 'btnTrack1', 'btnTrack2', 'btnTrack3'].forEach(id => document.getElementById(id).className = "btn");
+      if (t === -1) document.getElementById('btnTrackAll').className = "btn btn-active";
+      if (t === 1) document.getElementById('btnTrack1').className = "btn btn-active";
+      if (t === 2) document.getElementById('btnTrack2').className = "btn btn-active";
+      if (t === 3) document.getElementById('btnTrack3').className = "btn btn-active";
+    }
+    function toggleGrid() { sendCommand({ cmd: "toggle_grid" }); }
+
+    function updateZone() {
+      let z = {
+        cmd: "set_zone",
+        enabled: document.getElementById('zoneEnabled').checked,
+        xMin: parseFloat(document.getElementById('zoneXMin').value),
+        xMax: parseFloat(document.getElementById('zoneXMax').value),
+        yMin: parseFloat(document.getElementById('zoneYMin').value),
+        yMax: parseFloat(document.getElementById('zoneYMax').value)
+      };
+      sendCommand(z);
+    }
+
+    // Canvas Drawing
+    let radarCanvas, radarCtx, chartCanvas, chartCtx;
+
+    function initCanvases() {
+      radarCanvas = document.getElementById('radarCanvas');
+      radarCtx = radarCanvas.getContext('2d');
+      chartCanvas = document.getElementById('chartCanvas');
+      chartCtx = chartCanvas.getContext('2d');
+
+      resizeCanvases();
+      window.onresize = resizeCanvases;
+    }
+
+    function resizeCanvases() {
+      let wrapper = document.getElementById('canvasWrapper');
+      radarCanvas.width = wrapper.clientWidth;
+      radarCanvas.height = wrapper.clientHeight;
+      chartCanvas.width = chartCanvas.clientWidth;
+      chartCanvas.height = 100;
+    }
+
+    function renderLoop() {
+      renderRadar();
+      renderChart();
+      requestAnimationFrame(renderLoop);
+    }
+
+    function renderRadar() {
+      let w = radarCanvas.width;
+      let h = radarCanvas.height;
+      let ctx = radarCtx;
+
+      ctx.clearRect(0, 0, w, h);
+
+      let ox = w / 2;
+      let oy = h - 30;
+      let maxPixR = Math.min(w * 0.45, h - 50);
+      let maxR = currentData.range || 6.0;
+
+      // Draw FOV Cone (-60 to +60 deg)
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.arc(ox, oy, maxPixR, -Math.PI / 2 - (Math.PI / 3), -Math.PI / 2 + (Math.PI / 3));
+      ctx.closePath();
+      ctx.fillStyle = "rgba(0, 229, 255, 0.02)";
+      ctx.fill();
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Concentric Range Rings
+      let step = (maxR <= 4) ? 1 : 2;
+      for (let r = step; r <= maxR; r += step) {
+        let pixR = (r / maxR) * maxPixR;
+        ctx.beginPath();
+        ctx.arc(ox, oy, pixR, -Math.PI / 2 - (Math.PI / 3), -Math.PI / 2 + (Math.PI / 3));
+        ctx.strokeStyle = "#16233b";
+        ctx.stroke();
+
+        // Distance text
+        ctx.fillStyle = "#64748b";
+        ctx.font = "11px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(r + "m", ox + 18, oy - pixR);
+      }
+
+      // Angle Radial Lines (-60, -30, 0, 30, 60)
+      [-60, -30, 0, 30, 60].forEach(deg => {
+        let rad = deg * (Math.PI / 180);
+        let ex = ox + Math.sin(rad) * maxPixR;
+        let ey = oy - Math.cos(rad) * maxPixR;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(ex, ey);
+        ctx.strokeStyle = (deg === 0) ? "#334155" : "#16233b";
+        ctx.stroke();
+
+        ctx.fillStyle = "#475569";
+        ctx.font = "10px monospace";
+        ctx.fillText(deg + "°", ex, ey - 6);
+      });
+
+      // Animated Sweeping Beam
+      sweepAngle += 1.8;
+      if (sweepAngle > 60) sweepAngle = -60;
+      let sRad = sweepAngle * (Math.PI / 180);
+      let sx = ox + Math.sin(sRad) * maxPixR;
+      let sy = oy - Math.cos(sRad) * maxPixR;
+
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(sx, sy);
+      ctx.strokeStyle = "rgba(0, 229, 255, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Draw Geofence Alert Zone
+      let zone = currentData.zone;
+      if (zone && zone.enabled) {
+        let x1 = ox + (zone.xMin / maxR) * maxPixR;
+        let y1 = oy - (zone.yMax / maxR) * maxPixR;
+        let x2 = ox + (zone.xMax / maxR) * maxPixR;
+        let y2 = oy - (zone.yMin / maxR) * maxPixR;
+        let zw = x2 - x1;
+        let zh = y2 - y1;
+
+        ctx.fillStyle = currentData.alert ? "rgba(255, 23, 68, 0.15)" : "rgba(0, 230, 118, 0.08)";
+        ctx.fillRect(x1, y1, zw, zh);
+
+        ctx.strokeStyle = currentData.alert ? "#ff1744" : "#00e676";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(x1, y1, zw, zh);
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = currentData.alert ? "#ff1744" : "#00e676";
+        ctx.font = "bold 11px monospace";
+        ctx.fillText("ALERT ZONE", x1 + 6, y1 + 14);
+      }
+
+      // Draw Targets
+      let targets = currentData.targets || [];
+      targets.forEach(t => {
+        let tx = ox + (t.x / maxR) * maxPixR;
+        let ty = oy - (t.y / maxR) * maxPixR;
+
+        // Trails
+        if (t.trail && t.trail.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(ox + (t.trail[0].x / maxR) * maxPixR, oy - (t.trail[0].y / maxR) * maxPixR);
+          for (let k = 1; k < t.trail.length; k++) {
+            ctx.lineTo(ox + (t.trail[k].x / maxR) * maxPixR, oy - (t.trail[k].y / maxR) * maxPixR);
+          }
+          ctx.strokeStyle = "rgba(100, 116, 139, 0.4)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        // Color determination
+        let color = (t.src === 3) ? "#e040fb" : (t.src === 2) ? "#ffb300" : "#00e5ff";
+        if (t.inZone) color = "#ff1744";
+
+        // Blip Outer Glow
+        ctx.beginPath();
+        ctx.arc(tx, ty, t.inZone ? 14 : 10, 0, Math.PI * 2);
+        ctx.fillStyle = t.inZone ? "rgba(255, 23, 68, 0.3)" : "rgba(0, 229, 255, 0.2)";
+        ctx.fill();
+
+        // Blip Circle
+        ctx.beginPath();
+        ctx.arc(tx, ty, 6, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Velocity vector
+        if (Math.abs(t.spd) > 0.05) {
+          let vRad = t.ang * (Math.PI / 180);
+          let vx = tx + Math.sin(vRad) * (t.spd * 25);
+          let vy = ty - Math.cos(vRad) * (t.spd * 25);
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(vx, vy);
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        // Target HUD Tag
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 11px monospace";
+        ctx.fillText(`T${t.id}: ${t.dist.toFixed(1)}m (${t.spd > 0 ? '+' : ''}${t.spd.toFixed(1)}m/s)`, tx + 12, ty);
+      });
+
+      // Radar Sensor Node
+      ctx.beginPath();
+      ctx.arc(ox, oy, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#00e5ff";
+      ctx.fill();
+    }
+
+    function renderChart() {
+      let w = chartCanvas.width;
+      let h = chartCanvas.height;
+      let ctx = chartCtx;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw Grid line at middle
+      ctx.strokeStyle = "#16233b";
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+
+      // Plot line
+      ctx.beginPath();
+      let maxDist = currentData.range || 6.0;
+
+      for (let i = 0; i < distHistory.length; i++) {
+        let x = (i / (distHistory.length - 1)) * w;
+        let y = h - (distHistory[i] / maxDist) * (h - 10) - 5;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = "#00e5ff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  </script>
+</body>
+</html>
