@@ -7,15 +7,17 @@
 
 // --- Radar 1: HLK-LD2452 (24 GHz FMCW Tracking Radar) ---
 // Connected to ESP32 Hardware Serial 1
-#define PIN_LD2452_RX         16      // ESP32 RX1 <- HLK-LD2452 TX
-#define PIN_LD2452_TX         17      // ESP32 TX1 -> HLK-LD2452 RX
+// Physical 30-pin DevKit Silkscreen: Pin labeled "RX2" is GPIO 16 | Pin labeled "TX2" is GPIO 17
+#define PIN_LD2452_RX         16      // ESP32 RX <- HLK-LD2452 TX (Silkscreen: "RX2")
+#define PIN_LD2452_TX         17      // ESP32 TX -> HLK-LD2452 RX (Silkscreen: "TX2")
 #define LD2452_BAUD_RATE      256000  // Default baud rate for HLK-LD2452
 
 // --- Radar 2: HLK-LD6003D (60 GHz FMCW Trajectory Radar) ---
-// Connected to ESP32 Hardware Serial 2
-// NOTE: Use TX0 & RX0 on the LD6003 module (TX1/RX1 is debug, TX2/RX2 is flash/ISP)
-#define PIN_LD6003D_RX        25      // ESP32 RX2 <- HLK-LD6003D TX0 (Module Transmit)
-#define PIN_LD6003D_TX        26      // ESP32 TX2 -> HLK-LD6003D RX0 (Module Receive)
+// Connected to ESP32 Hardware Serial 2 (remapped via ESP32 GPIO Matrix)
+// Physical 30-pin DevKit Silkscreen: Pin labeled "D25" is GPIO 25 | Pin labeled "D26" is GPIO 26
+// Connect to TX0 & RX0 on the LD6003 module!
+#define PIN_LD6003D_RX        25      // ESP32 RX <- HLK-LD6003D TX0 (Silkscreen: "D25" or "G25")
+#define PIN_LD6003D_TX        26      // ESP32 TX -> HLK-LD6003D RX0 (Silkscreen: "D26" or "G26")
 #define LD6003D_BAUD_RATE     115200  // Default baud rate for HLK-LD6003D
 
 // --- Display: 3.5" SPI TFT (ILI9488 480x320) ---

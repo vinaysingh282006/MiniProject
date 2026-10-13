@@ -80,42 +80,61 @@ The code uses GPIO assignments that are **100% available and identical on both 3
 | **Touch (XPT2046)** | **T_IRQ** | **GPIO 22** | Digital Input | 🟡 Yellow/White | Touch Pen Down Interrupt |
 | **Radar 1: HLK-LD2452** | **VCC** | **VIN (5V)** | Power (+5V) | 🔴 Red | 5V DC supply (~126 mA operating) |
 | **Radar 1: HLK-LD2452** | **GND** | **GND** | Ground | ⚫ Black | Ground |
-| **Radar 1: HLK-LD2452** | **TX** | **GPIO 16 (RX1)** | UART1 RX | 🔵 Blue | Radar TX -> ESP32 RX1 (**256,000 baud**) |
-| **Radar 1: HLK-LD2452** | **RX** | **GPIO 17 (TX1)** | UART1 TX | 🟢 Green | Radar RX <- ESP32 TX1 |
+| **Radar 1: HLK-LD2452** | **TX** | **GPIO 16 (Silkscreen: RX2)** | UART1 RX | 🔵 Blue | Radar TX -> ESP32 RX (**256,000 baud**) |
+| **Radar 1: HLK-LD2452** | **RX** | **GPIO 17 (Silkscreen: TX2)** | UART1 TX | 🟢 Green | Radar RX <- ESP32 TX |
 | **Radar 2: HLK-LD6003D** | **VCC** | **3.3V or 5V** | Power (VCC) | 🔴 Red | 3.3V (raw chip) or 5V (carrier PCB) |
 | **Radar 2: HLK-LD6003D** | **GND** | **GND** | Ground | ⚫ Black | Ground |
-| **Radar 2: HLK-LD6003D** | **TX0 (UART0)** | **GPIO 25 (RX2)** | UART2 RX | 🔵 Blue | **USE THIS!** Radar Target Data Output -> ESP32 RX2 |
-| **Radar 2: HLK-LD6003D** | **RX0 (UART0)** | **GPIO 26 (TX2)** | UART2 TX | 🟢 Green | **USE THIS!** Radar Command Input <- ESP32 TX2 |
+| **Radar 2: HLK-LD6003D** | **TX0 (UART0)** | **GPIO 25 (Silkscreen: D25)** | UART2 RX | 🔵 Blue | **USE THIS!** Radar Target Data Output -> ESP32 RX2 |
+| **Radar 2: HLK-LD6003D** | **RX0 (UART0)** | **GPIO 26 (Silkscreen: D26)** | UART2 TX | 🟢 Green | **USE THIS!** Radar Command Input <- ESP32 TX2 |
 | **Radar 2: HLK-LD6003D** | **TX1 / RX1** | *DO NOT CONNECT* | UART1 Debug | - | Internal SoC Debug Console (leave floating) |
 | **Radar 2: HLK-LD6003D** | **TX2 / RX2** | *DO NOT CONNECT* | UART2 Flash | - | Factory Firmware Flash / ISP (leave floating) |
 | **Radar 2: HLK-LD6003D** | **BOOT / P19 (if present)** | **GND** | Boot Config | ⚫ Black | Pull LOW/GND for normal internal flash boot |
-| **Alert Buzzer (Opt.)** | **Buzzer (+)** | **GPIO 32** | Digital Output | 🔴 Red | Active 5V/3.3V Piezo Buzzer |
+| **Alert Buzzer (Opt.)** | **Buzzer (+)** | **GPIO 32 (Silkscreen: D32)** | Digital Output | 🔴 Red | Active 5V/3.3V Piezo Buzzer |
 | **Alert Buzzer (Opt.)** | **Buzzer (-)** | **GND** | Ground | ⚫ Black | Ground |
+
+---
+
+### 🔍 Important: Understanding ESP32 30-Pin Silkscreen Labels & GPIO 25/26 UART
+
+> [!NOTE]
+> **Why are GPIO 16 and 17 labeled "RX2" and "TX2" on your ESP32 board, while GPIO 25 and 26 are labeled "D25" and "D26"?**
+> 
+> 1. **The ESP32 GPIO Matrix (Flexible Hardware Pin Routing):**
+>    Unlike older microcontrollers (like Arduino Uno/Mega) where UART pins are hardwired to fixed physical legs, the ESP32 contains an internal **crossbar switch called the GPIO Matrix (IO MUX)**. This architecture allows the ESP32's hardware UART controllers to be mapped to **virtually any standard GPIO pin** without any performance penalty!
+>    - When our code executes `Serial2.begin(115200, SERIAL_8N1, 25, 26)`, the internal hardware UART2 controller is dynamically connected directly to **GPIO 25 and GPIO 26**.
+>    - This is **genuine, full-speed Hardware UART with 128-byte hardware FIFO buffers and DMA/interrupts** (not software emulation / SoftwareSerial).
+>
+> 2. **Why the board manufacturer printed "RX2" and "TX2" on GPIO 16 & 17:**
+>    - In Espressif's default silicon datasheet, UART2's default power-on reset pins happen to be GPIO 16 & 17. Board makers therefore printed `RX2` and `TX2` next to them on the PCB.
+>    - However, UART1's silicon default pins were GPIO 9 & 10, which are **permanently connected to the internal SPI Flash memory chip under the ESP32 metal shield**. If any board attempts to use GPIO 9 & 10, the ESP32 crashes immediately.
+>    - Therefore, to run **two separate hardware UART sensors simultaneously** on ESP32:
+>      - **Sensor 1 (HLK-LD2452)** is wired to the pins stamped **`RX2` (GPIO 16)** and **`TX2` (GPIO 17)**.
+>      - **Sensor 2 (HLK-LD6003D)** is wired to the general-purpose pins stamped **`D25` (GPIO 25)** and **`D26` (GPIO 26)**, which the ESP32's GPIO Matrix transforms into full Hardware UART pins!
 
 ---
 
 ### Wire-by-Wire Color-Coded Hookup Guide
 
 #### Step 1: Display & Touch Bus (Shared SPI)
-1. Connect **SCK** on the TFT board and **T_CLK** on the Touch header together and wire both to **GPIO 18**.
-2. Connect **SDI (MOSI)** on the TFT board and **T_DIN** on the Touch header together and wire both to **GPIO 23**.
-3. Connect **SDO (MISO)** on the TFT board and **T_DO** on the Touch header together and wire both to **GPIO 19**.
-4. Wire **TFT_CS** to **GPIO 15**, and wire **T_CS** to **GPIO 21**.
-5. Wire **DC / RS** to **GPIO 2**, **RST** to **GPIO 4**, **LED (BL)** to **GPIO 27**, and **T_IRQ** to **GPIO 22**.
+1. Connect **SCK** on the TFT board and **T_CLK** on the Touch header together and wire both to **GPIO 18** (labeled `D18` or `CLK`).
+2. Connect **SDI (MOSI)** on the TFT board and **T_DIN** on the Touch header together and wire both to **GPIO 23** (labeled `D23` or `MOSI`).
+3. Connect **SDO (MISO)** on the TFT board and **T_DO** on the Touch header together and wire both to **GPIO 19** (labeled `D19` or `MISO`).
+4. Wire **TFT_CS** to **GPIO 15** (labeled `D15`), and wire **T_CS** to **GPIO 21** (labeled `D21`).
+5. Wire **DC / RS** to **GPIO 2** (labeled `D2`), **RST** to **GPIO 4** (labeled `D4`), **LED (BL)** to **GPIO 27** (labeled `D27`), and **T_IRQ** to **GPIO 22** (labeled `D22`).
 
 #### Step 2: HLK-LD2452 (24 GHz Sensor)
 1. Wire **VCC** to **VIN (5V)**.
 2. Wire **GND** to **GND**.
-3. Wire **TX** pin to **GPIO 16**.
-4. Wire **RX** pin to **GPIO 17**.
+3. Wire **TX** on LD2452 to the ESP32 pin labeled **`RX2`** (which is **GPIO 16**).
+4. Wire **RX** on LD2452 to the ESP32 pin labeled **`TX2`** (which is **GPIO 17**).
 
-#### Step 3: HLK-LD6003D (60 GHz Sensor) - Understanding the 3 UARTs
+#### Step 3: HLK-LD6003D (60 GHz Sensor)
 The HLK-LD6003 module breaks out multiple UART ports from its internal ARM SoC:
-- **`TX0` and `RX0` (UART0) -> USE THESE!**: This is the **primary radar reporting port**. It outputs real-time target coordinates ($X, Y$), speed, tracking data, and accepts configuration frames at `115200 bps`.
-  - Wire **`TX0`** on the sensor to **`GPIO 25`** on ESP32.
-  - Wire **`RX0`** on the sensor to **`GPIO 26`** on ESP32.
-- **`TX1` and `RX1` (UART1) -> DO NOT CONNECT**: Debug serial channel for internal firmware kernel output.
-- **`TX2` and `RX2` (UART2) -> DO NOT CONNECT**: Factory burning / ISP flashing port.
+- **`TX0` and `RX0` (UART0) -> USE THESE!**:
+  - Wire **`TX0`** on LD6003D to the ESP32 pin labeled **`D25`** (which is **GPIO 25**).
+  - Wire **`RX0`** on LD6003D to the ESP32 pin labeled **`D26`** (which is **GPIO 26**).
+- **`TX1` and `RX1`**: Leave disconnected (internal debug logs).
+- **`TX2` and `RX2`**: Leave disconnected (factory flashing).
 - **`VCC`**: Check your module label (3.3V for raw module, 5V if carrier board with LDO).
 - **`GND`**: Wire to ESP32 **GND**.
 - **`BOOT / P19` (if exposed on your pin header)**: Connect to **GND** for normal flash boot.
