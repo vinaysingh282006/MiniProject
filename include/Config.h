@@ -13,8 +13,9 @@
 
 // --- Radar 2: HLK-LD6003D (60 GHz FMCW Trajectory Radar) ---
 // Connected to ESP32 Hardware Serial 2
-#define PIN_LD6003D_RX        25      // ESP32 RX2 <- HLK-LD6003D TX
-#define PIN_LD6003D_TX        26      // ESP32 TX2 -> HLK-LD6003D RX
+// NOTE: Use TX0 & RX0 on the LD6003 module (TX1/RX1 is debug, TX2/RX2 is flash/ISP)
+#define PIN_LD6003D_RX        25      // ESP32 RX2 <- HLK-LD6003D TX0 (Module Transmit)
+#define PIN_LD6003D_TX        26      // ESP32 TX2 -> HLK-LD6003D RX0 (Module Receive)
 #define LD6003D_BAUD_RATE     115200  // Default baud rate for HLK-LD6003D
 
 // --- Display: 3.5" SPI TFT (ILI9488 480x320) ---

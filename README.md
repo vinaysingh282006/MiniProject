@@ -84,8 +84,11 @@ The code uses GPIO assignments that are **100% available and identical on both 3
 | **Radar 1: HLK-LD2452** | **RX** | **GPIO 17 (TX1)** | UART1 TX | 🟢 Green | Radar RX <- ESP32 TX1 |
 | **Radar 2: HLK-LD6003D** | **VCC** | **3.3V or 5V** | Power (VCC) | 🔴 Red | 3.3V (raw chip) or 5V (carrier PCB) |
 | **Radar 2: HLK-LD6003D** | **GND** | **GND** | Ground | ⚫ Black | Ground |
-| **Radar 2: HLK-LD6003D** | **TX** | **GPIO 25 (RX2)** | UART2 RX | 🔵 Blue | Radar TX -> ESP32 RX2 (**115,200 baud**) |
-| **Radar 2: HLK-LD6003D** | **RX** | **GPIO 26 (TX2)** | UART2 TX | 🟢 Green | Radar RX <- ESP32 TX2 |
+| **Radar 2: HLK-LD6003D** | **TX0 (UART0)** | **GPIO 25 (RX2)** | UART2 RX | 🔵 Blue | **USE THIS!** Radar Target Data Output -> ESP32 RX2 |
+| **Radar 2: HLK-LD6003D** | **RX0 (UART0)** | **GPIO 26 (TX2)** | UART2 TX | 🟢 Green | **USE THIS!** Radar Command Input <- ESP32 TX2 |
+| **Radar 2: HLK-LD6003D** | **TX1 / RX1** | *DO NOT CONNECT* | UART1 Debug | - | Internal SoC Debug Console (leave floating) |
+| **Radar 2: HLK-LD6003D** | **TX2 / RX2** | *DO NOT CONNECT* | UART2 Flash | - | Factory Firmware Flash / ISP (leave floating) |
+| **Radar 2: HLK-LD6003D** | **BOOT / P19 (if present)** | **GND** | Boot Config | ⚫ Black | Pull LOW/GND for normal internal flash boot |
 | **Alert Buzzer (Opt.)** | **Buzzer (+)** | **GPIO 32** | Digital Output | 🔴 Red | Active 5V/3.3V Piezo Buzzer |
 | **Alert Buzzer (Opt.)** | **Buzzer (-)** | **GND** | Ground | ⚫ Black | Ground |
 
@@ -106,11 +109,16 @@ The code uses GPIO assignments that are **100% available and identical on both 3
 3. Wire **TX** pin to **GPIO 16**.
 4. Wire **RX** pin to **GPIO 17**.
 
-#### Step 3: HLK-LD6003D (60 GHz Sensor)
-1. Check your module's silkscreen: If it has an onboard 3.3V regulator chip (AMS1117 / 6206A), connect **VCC** to **VIN (5V)**; if it is the raw stamp-hole module, connect to **3.3V**.
-2. Wire **GND** to **GND**.
-3. Wire **TX** pin to **GPIO 25**.
-4. Wire **RX** pin to **GPIO 26**.
+#### Step 3: HLK-LD6003D (60 GHz Sensor) - Understanding the 3 UARTs
+The HLK-LD6003 module breaks out multiple UART ports from its internal ARM SoC:
+- **`TX0` and `RX0` (UART0) -> USE THESE!**: This is the **primary radar reporting port**. It outputs real-time target coordinates ($X, Y$), speed, tracking data, and accepts configuration frames at `115200 bps`.
+  - Wire **`TX0`** on the sensor to **`GPIO 25`** on ESP32.
+  - Wire **`RX0`** on the sensor to **`GPIO 26`** on ESP32.
+- **`TX1` and `RX1` (UART1) -> DO NOT CONNECT**: Debug serial channel for internal firmware kernel output.
+- **`TX2` and `RX2` (UART2) -> DO NOT CONNECT**: Factory burning / ISP flashing port.
+- **`VCC`**: Check your module label (3.3V for raw module, 5V if carrier board with LDO).
+- **`GND`**: Wire to ESP32 **GND**.
+- **`BOOT / P19` (if exposed on your pin header)**: Connect to **GND** for normal flash boot.
 
 ---
 
